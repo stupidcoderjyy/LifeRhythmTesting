@@ -19,8 +19,8 @@ set(INCLUDES
 )
 
 set(SRC_FILES
-        src/xyplot/XYPlot.h
         src/xyplot/XYPlot.cpp
+        src/xyplot/XYPlot.h
 )
 
 #把LR自带的资源
@@ -74,7 +74,7 @@ endforeach ()
 
 list(APPEND CORE_INCLUDES ${LR_PROJECT_INCLUDES})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CORE_INCLUDES} ${INCLUDES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES} ${CORE_INCLUDES})
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(DEBUG_SUFFIX)

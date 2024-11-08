@@ -24,7 +24,7 @@ void SlotsWidget::syncItem(int idx) const {
     item->syncDataToWidget();
 }
 
-void SlotsWidget::onDataChanged(int begin, int end) const {
+void SlotsWidget::syncItems(int begin, int end) const {
     int rBorder = qMin(rows * columns, wData->cast<ListData>()->length());
     if (end < 0 || begin >= rBorder) {
         return;
@@ -49,7 +49,7 @@ void SlotsWidget::resizeEvent(QResizeEvent *event) {
 void SlotsWidget::connectModelView() {
     dc << connect(wData, &WidgetData::sigDataChanged, this, [this] {
         auto* d = wData->cast<ListData>();
-        onDataChanged(d->getChangeBegin(), d->getChangeEnd());
+        syncItems(d->getChangeBegin(), d->getChangeEnd());
     });
 }
 
@@ -87,5 +87,5 @@ void SlotsWidget::updateBase() {
         delete items[i++];
     }
     items.remove(rb, rn);
-    onDataChanged(0, totalItems);
+    syncItems(0, totalItems);
 }

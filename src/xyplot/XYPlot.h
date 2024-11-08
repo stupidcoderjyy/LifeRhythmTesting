@@ -7,13 +7,16 @@
 
 #include <Widget.h>
 
-class XYPlot : public Widget {
+class XYPlot final : public Widget {
     friend class XYPlotBuilder;
 private:
     const static QMargins MARGINS;
-    const static double SPACING;
     QVector<std::function<double(double)>> functions;
+    QVector<std::function<double(double)>> equations;
     QVector<QVector<QPointF>> points;
+    std::function<QString(double)> xCoordHint;
+    std::function<QString(double)> yCoordHint;
+    double spacing;
     double xBegin, xEnd;
     double minY, maxY;
     int xSlots, ySlots;
@@ -23,8 +26,6 @@ protected:
     XYPlot();
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
-    virtual QString xCoordHint(double value);
-    virtual QString yCoordHint(double value);
 private:
     void drawPlot(QPainter& painter);
 };
@@ -35,8 +36,13 @@ private:
 public:
     XYPlotBuilder();
     XYPlotBuilder& setRange(double xBegin, double xEnd);
+    XYPlotBuilder& limitY(double minY, double maxY);
     XYPlotBuilder& setSlots(int xSlots, int ySlots);
+    XYPlotBuilder& setXCoordHint(std::function<QString(double)> func);
+    XYPlotBuilder& setyCoordHint(std::function<QString(double)> func);
+    XYPlotBuilder& setSpacing(double spacing);
     XYPlotBuilder& addFunction(const std::function<double(double)>& func);
+    XYPlotBuilder& addEquation(const std::function<double(double)>& eq);
     XYPlot* get() const;
 };
 

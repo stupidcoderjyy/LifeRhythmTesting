@@ -28,9 +28,9 @@ public:
     inline void setRows(int count);
     inline void setSlotSizePolicy(SlotSizePolicy vertical, SlotSizePolicy horizontal);
 protected:
-    void prepareItem(ListItem* w);
-    void onDataChanged(int begin, int end) const;
-    void syncItem(int idx) const;
+    virtual void prepareItem(ListItem* w);
+    void syncItems(int begin, int end) const;
+    virtual void syncItem(int idx) const;
     virtual ListItem* newItem();
     void resizeEvent(QResizeEvent* event) override;
     void connectModelView() override;

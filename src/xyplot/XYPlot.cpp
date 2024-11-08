@@ -3,11 +3,11 @@
 //
 
 #include "XYPlot.h"
+
+#include <math.h>
 #include <QDebug>
 
 const QMargins XYPlot::MARGINS = {50,50,50,50};
-
-const double XYPlot::SPACING = 0.01;
 
 void XYPlot::outputImage(const QString &path) {
     auto img = new QPixmap(width(), height());
@@ -19,24 +19,31 @@ void XYPlot::outputImage(const QString &path) {
     delete img;
 }
 
-XYPlot::XYPlot(): xBegin(), xEnd(), minY(), maxY(), xSlots(), ySlots() {
+XYPlot::XYPlot(): spacing(0.01), xBegin(), xEnd(), minY(2.22507e-308), maxY(1.79769e+308), xSlots(), ySlots() {
+    xCoordHint = [](double value) {
+        return QString::asprintf("%.1f", value);
+    };
+    yCoordHint = xCoordHint;
 }
 
 void XYPlot::resizeEvent(QResizeEvent *event) {
     const int canvasW = width() - MARGINS.left() - MARGINS.right();
     const int canvasH = height() - MARGINS.bottom() - MARGINS.top();
-    minY = 1.79769e+308;
-    maxY = 2.22507e-308;
     QVector<QVector<QPointF>> values;
+    auto min = minY, max = maxY;
     for (const auto& func : functions) {
         double x = xBegin;
         auto child = QVector<QPointF>();
-        while (x - xEnd < SPACING) {
+        while (x - xEnd < spacing) {
             double y = func(x);
-            minY = qMin(minY, y);
-            maxY = qMax(maxY, y);
+            if (y > maxY || y < minY || isnan(y) || isinf(y)) {
+                x += spacing;
+                continue;
+            }
+            min = qMin(min, y);
+            max = qMax(max, y);
             child << QPointF(x, y);
-            x += SPACING;
+            x += spacing;
         }
         values << child;
     }
@@ -88,31 +95,29 @@ void XYPlot::drawPlot(QPainter& painter) {
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setFont(Styles::FONT_SMALL);
     for (int i = 0 ; i <= xSlots ; i ++) {
-        if (!(i & 1)) {
-            continue;
-        }
         int x = qRound(MARGINS.left() + i * sw);
         double val = xBegin + i * (xEnd - xBegin) / xSlots;
-        auto rect = QRect(QPoint(x - 20, y1 + 2), QPoint(x + 20, y1 + 20));
-        painter.drawText(rect, xCoordHint(val), Qt::AlignTop | Qt::AlignHCenter);
+        QRect rect;
+        if (i == 0) {
+            rect = QRect(QPoint(x, y1), QPoint(x + 40, y1 + 20));
+            painter.drawText(rect, xCoordHint(val), Qt::AlignTop | Qt::AlignLeft);
+        } else {
+            rect = QRect(QPoint(x - 20, y1), QPoint(x + 20, y1 + 20));
+            painter.drawText(rect, xCoordHint(val), Qt::AlignTop | Qt::AlignHCenter);
+        }
     }
     for (int i = 0 ; i <= ySlots ; i ++) {
-        if (!(i & 1)) {
-            continue;
+        int y = qRound(MARGINS.top() + (ySlots - i) * sh);
+        double val = minY + i * (maxY - minY) / ySlots;
+        QRect rect;
+        if (i == 0) {
+            rect = QRect(QPoint(x0 - 50, y - 40), QPoint(x0 - 2, y));
+            painter.drawText(rect, yCoordHint(val), Qt::AlignRight | Qt::AlignBottom);
+        } else {
+            rect = QRect(QPoint(x0 - 50, y - 20), QPoint(x0 - 2, y + 20));
+            painter.drawText(rect, yCoordHint(val), Qt::AlignRight | Qt::AlignVCenter);
         }
-        int y = qRound(MARGINS.top() + i * sh);
-        double val = minY + (ySlots - i) * (maxY - minY) / ySlots;
-        auto rect = QRect(QPoint(x0 - 50, y - 20), QPoint(x0 - 2, y + 20));
-        painter.drawText(rect, yCoordHint(val), Qt::AlignRight | Qt::AlignVCenter);
     }
-}
-
-QString XYPlot::xCoordHint(double value) {
-    return QString::asprintf("%.1f", value);
-}
-
-QString XYPlot::yCoordHint(double value) {
-    return QString::asprintf("%.1f", value);
 }
 
 XYPlotBuilder::XYPlotBuilder() {
@@ -125,14 +130,40 @@ XYPlotBuilder & XYPlotBuilder::setRange(double xBegin, double xEnd) {
     return *this;
 }
 
+XYPlotBuilder & XYPlotBuilder::limitY(double minY, double maxY) {
+    plot->minY = minY;
+    plot->maxY = maxY;
+    return *this;
+}
+
 XYPlotBuilder & XYPlotBuilder::setSlots(int xSlots, int ySlots) {
     plot->xSlots = xSlots;
     plot->ySlots = ySlots;
     return *this;
 }
 
+XYPlotBuilder & XYPlotBuilder::setXCoordHint(std::function<QString(double)> func) {
+    plot->xCoordHint = std::move(func);
+    return *this;
+}
+
+XYPlotBuilder & XYPlotBuilder::setyCoordHint(std::function<QString(double)> func) {
+    plot->yCoordHint = std::move(func);
+    return *this;
+}
+
+XYPlotBuilder & XYPlotBuilder::setSpacing(double spacing) {
+    plot->spacing = spacing;
+    return *this;
+}
+
 XYPlotBuilder & XYPlotBuilder::addFunction(const std::function<double(double)>& func) {
     plot->functions.append(func);
+    return *this;
+}
+
+XYPlotBuilder & XYPlotBuilder::addEquation(const std::function<double(double)> &eq) {
+    plot->equations.append(eq);
     return *this;
 }
 
