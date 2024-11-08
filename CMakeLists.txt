@@ -7,20 +7,28 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_PREFIX_PATH "C:/Program Files/Qt/5.15.2/mingw81_64/lib/cmake")
-set(LR_PROJECT_PATH "C:/Users/JYY/CLionProjects/LifeRhythm")
+set(LR_PROJECT_PATH "C:/Users/stupid_coder_jyy/CLionProjects/LifeRhythm")
 set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testXYPlot.cpp)
+set(TEST_ENTRYPOINT testCalendar.cpp)
 
 set(INCLUDES
-        src/xyplot
+        src/slotsPainter
+        src/calendar
+        src/slotsWidget
 )
 
 set(SRC_FILES
-        src/xyplot/XYPlot.cpp
-        src/xyplot/XYPlot.h
+        src/slotsPainter/SlotsPainter.cpp
+        src/slotsPainter/SlotsPainter.h
+        src/calendar/Calendar.cpp
+        src/calendar/Calendar.h
+        src/calendar/CalendarView.cpp
+        src/calendar/CalendarView.h
+        src/slotsWidget/SlotsWidget.cpp
+        src/slotsWidget/SlotsWidget.h
 )
 
 #把LR自带的资源

@@ -1,0 +1,17 @@
+{
+    children: ["top", "drawer"]
+
+    layout: {
+        type: "Vertical"
+        margins: [0,0,0,0]
+        spacing: 0
+    }
+
+    top: {
+        children: ["label"]
+
+        layout: {
+
+        }
+    }
+}
