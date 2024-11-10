@@ -11,89 +11,49 @@
 #include "SlotsPainter.h"
 #include <QDateTime>
 
-class MiniCalendarData : public WidgetData {
-    friend class CalendarContentDrawer;
-    friend class MiniCalendar;
-protected:
-    QDate topLeftDate;
-    QDate mainMonth;
-    int posMark1;
-    int posMark2;
-public:
-    MiniCalendarData();
-    explicit MiniCalendarData(const QDate &date);
-    void setTopLeftDate(const QDate& d);
-};
-
-class WeekDayTitleLayer : public DrawerLayer {
-protected:
-    void beforeDrawing(QPainter &p, QRect &area) override;
-    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
-};
-
-class CalendarContentLayer : public DrawerLayer {
-    friend class MiniCalendar;
-private:
-    int firstDay;
-    int mainMonthBegin;
-    int mainMonthEnd;
-    int day;
-    int count;
-public:
-    CalendarContentLayer();
-protected:
-    bool shouldDraw() override;
-    void beforeDrawing(QPainter &p, QRect &area) override;
-    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
-};
-
-class WeekDayTitleDrawer : public SlotsPainter {
-public:
-    explicit WeekDayTitleDrawer(QWidget* parent = nullptr);
-protected:
-    void initLayers() override;
-    void paintEvent(QPaintEvent *event) override;
-};
-
-class CalendarContentDrawer : public SlotsPainter {
-    friend class MiniCalendar;
-protected:
-    CalendarContentLayer* baseLayer;
-public:
-    explicit CalendarContentDrawer(QWidget* parent = nullptr);
-protected:
-    void initLayers() override;
-    void wheelEvent(QWheelEvent *event) override;
-};
+class ContentLayer;
+class TitleLayer;
 
 class MiniCalendar : public Widget {
+private:
+    ContentLayer* layerContent;
+    TitleLayer* layerTitle;
+
+};
+
+class MiniCalendarData : public WidgetData {
 public:
-    enum ViewType {
-        Year,
+    enum ViewLevel {
+        Day,
         Month,
-        Day
+        Year
     };
-protected:
-    CalendarContentDrawer* contentDrawer;
-    WeekDayTitleDrawer* titleDrawer;
-    ImgButton* buttonPrev;
-    ImgButton* buttonNext;
-    TextLabel* title;
-    bool shouldInit;
+private:
+    ViewLevel viewLevel;
+    QDate topLeftDate;
+    int mark1, mark2;
 public:
-    explicit MiniCalendar(
-            WeekDayTitleDrawer* t,
-            CalendarContentDrawer* c,
-            QWidget* parent = nullptr);
-    void onFinishedParsing(Handlers &handlers, NBT *widgetTag) override;
-    void syncDataToWidget() override;
-    void loadDate(const QDate& d) const;
-    void setData(WidgetData *d) override;
-    void initCalendar();
+    MiniCalendarData();
+};
+
+class ContentLayer : public SlotsPainterLayer {
+private:
+    int firstVal;
+    int mark1, mark2;
+    int val, count;
+    MiniCalendarData::ViewLevel viewLevel;
+public:
+    ContentLayer();
+    void setVal(MiniCalendarData::ViewLevel viewLevel, int firstVal, int mark1, int mark2);
 protected:
-    void resizeEvent(QResizeEvent *event) override;
-    void connectModelView() override;
-    virtual void init();
+    void beforeDrawing(QPainter &p) override;
+    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
+};
+
+class TitleLayer : public SlotsPainterLayer {
+protected:
+    void beforeDrawing(QPainter &p) override;
+    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
 };
 
 #endif //LIFERHYTHM_CALENDAR_H

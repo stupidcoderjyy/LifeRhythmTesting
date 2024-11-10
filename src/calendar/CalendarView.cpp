@@ -18,7 +18,22 @@ void CalendarItem::syncDataToWidget() {
         auto today = QDate::currentDate();
         isToday = date == today;
         isCurrentMonth = date.month() == today.month();
+        updateOutline();
         update();
+    }
+}
+
+void CalendarItem::resizeEvent(QResizeEvent *event) {
+    updateOutline();
+}
+
+void CalendarItem::updateOutline() {
+    outline = rect();
+    if (dataIdx >= 35) {
+        outline.setHeight(height() - 1);
+    }
+    if (dataIdx % 7 == 6) {
+        outline.setWidth(width() - 1);
     }
 }
 
@@ -30,20 +45,20 @@ void CalendarItem::paintEvent(QPaintEvent *event) {
     QPen pen;
     painter.fillRect(rect(), Styles::BLACK->color);
     painter.setPen(Styles::GRAY_1->color);
-    painter.drawRect(rect());
+    painter.drawRect(outline);
     painter.setRenderHint(QPainter::Antialiasing, true);
     if (isCurrentMonth) {
         if (isToday) {
             painter.setPen(Styles::BLUE_1->color);
             painter.setBrush(Styles::BLUE_1->color);
             painter.drawEllipse({15, 15}, 12, 12);
-            painter.setFont(FontBuilder(Styles::FONT_TYPE_MAIN).setBoldWeight().setLargeSize().get());
+            painter.setFont(FontBuilder(Styles::FONT_TYPE_MAIN).setBoldWeight().setMediumSize().get());
         } else {
-            painter.setFont(Styles::FONT_LARGE);
+            painter.setFont(Styles::FONT_MAIN);
         }
         pen.setColor(Styles::GRAY_TEXT_0->color);
     } else {
-        painter.setFont(Styles::FONT_LARGE);
+        painter.setFont(Styles::FONT_MAIN);
         pen.setColor(Styles::GRAY_4->color);
     }
     painter.setPen(pen);
@@ -52,8 +67,7 @@ void CalendarItem::paintEvent(QPaintEvent *event) {
 }
 
 CalendarView::CalendarView(QWidget *parent): SlotsWidget(parent) {
-    setRows(6);
-    setColumns(7);
+    setSlotCount(7, 6);
     setMinimumSize(700, 600);
 }
 
@@ -118,6 +132,5 @@ int CalendarUpdateListener::onReceived(const Identifier &sender, const NBT *data
     d->clear();
     d->fromMessage(data);
     d->markAll();
-    qDebug() << "received";
     return 16;
 }

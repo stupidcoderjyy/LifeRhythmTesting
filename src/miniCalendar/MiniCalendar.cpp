@@ -8,185 +8,52 @@
 #include <QWheelEvent>
 #include <QLayout>
 
-MiniCalendarData::MiniCalendarData(): posMark1(), posMark2() {
+MiniCalendarData::MiniCalendarData(): viewLevel(Day), mark1(0), mark2(0) {
 }
 
-MiniCalendarData::MiniCalendarData(const QDate &date): topLeftDate(date), posMark1(0), posMark2(0) {
+ContentLayer::ContentLayer(): firstVal(), mark1(-1), mark2(-1), val(), count(), viewLevel() {
 }
 
-void MiniCalendarData::setTopLeftDate(const QDate &d) {
-    QDate date = d;
-    if (d.dayOfWeek() != 1) {
-        date = d.addDays(1 - d.dayOfWeek());
-    }
-    if (topLeftDate != date) {
-        topLeftDate = date;
-        if (date.day() > 14) {
-            auto d1 = date.addMonths(1);
-            d1.setDate(d1.year(), d1.month(), 1);
-            posMark1 = static_cast<int>(date.daysTo(d1));
-            posMark2 = posMark1 + d1.daysInMonth();
-            mainMonth = d1;
-        } else {
-            auto d1 = QDate(date.year(), date.month(), 1);
-            posMark1 = 0;
-            posMark2 = d1.daysInMonth() - date.day() + 1;
-            mainMonth = date;
-        }
-        emit sigDataChanged();
-    }
+void ContentLayer::setVal(MiniCalendarData::ViewLevel vl, int fv, int m1, int m2) {
+    viewLevel = vl;
+    firstVal = fv;
+    mark1 = m1;
+    mark2 = m2;
 }
 
-void WeekDayTitleLayer::beforeDrawing(QPainter &p, QRect &area) {
-    p.setFont(FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().setLargeSize().get());
-    p.fillRect(parent->rect(), Styles::BLACK->color);
-    p.setPen(Styles::GRAY_TEXT_0->color);
-}
-
-void WeekDayTitleLayer::drawSlot(QPainter &p, QRect &area, int row, int column) {
-    p.drawText(area, Qt::AlignCenter, DateUtil::WEEKDAYS_CN[column]);
-}
-
-CalendarContentLayer::CalendarContentLayer(): firstDay(), mainMonthBegin(-1), mainMonthEnd(-1), day(), count() {
-}
-
-bool CalendarContentLayer::shouldDraw() {
-    return parent->widgetData();
-}
-
-void CalendarContentLayer::beforeDrawing(QPainter &p, QRect &area) {
+void ContentLayer::beforeDrawing(QPainter &p) {
     p.setFont(Styles::FONT_LARGE);
     p.setPen(Styles::GRAY_4->color);
-    day = firstDay;
+    val = firstVal;
     count = 0;
 }
 
-void CalendarContentLayer::drawSlot(QPainter &p, QRect &area, int row, int column) {
-    p.fillRect(area, Styles::BLACK->color);
-    if (count == mainMonthBegin) {
+void ContentLayer::drawSlot(QPainter &p, QRect &area, int row, int column) {
+    if (count == mark1) {
         p.setPen(Styles::GRAY_TEXT_0->color);
-        if (mainMonthBegin > 0) {
-            day = 1;
+        if (viewLevel != MiniCalendarData::Year && mark1 > 0) {
+            val = 1;
         }
-    } else if (count == mainMonthEnd) {
+    } else if (count == mark2) {
         p.setPen(Styles::GRAY_3->color);
-        day = 1;
+        if (viewLevel != MiniCalendarData::Year) {
+            val = 1;
+        }
     }
-    p.drawText(area, Qt::AlignCenter, QString::number(day));
-    day++;
+    if (viewLevel == MiniCalendarData::Month) {
+        p.drawText(area, Qt::AlignCenter, QString::number(val++) + "月");
+    } else {
+        p.drawText(area, Qt::AlignCenter, QString::number(val++));
+    }
     count++;
 }
 
-
-WeekDayTitleDrawer::WeekDayTitleDrawer(QWidget *parent): SlotsPainter(50, 40, 7, 1, parent) {
+void TitleLayer::beforeDrawing(QPainter &p) {
+    p.setFont(FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get());
+    p.fillRect(parent->rect(), Styles::GRAY_0->color);
+    p.setPen(Styles::GRAY_TEXT_0->color);
 }
 
-void WeekDayTitleDrawer::initLayers() {
-    appendLayer(new WeekDayTitleLayer);
-}
-
-void WeekDayTitleDrawer::paintEvent(QPaintEvent *event) {
-    SlotsPainter::paintEvent(event);
-    QPainter painter(this);
-    painter.setPen(QPen(Styles::GRAY_0->color, 1));
-    int y = height() - 1;
-    painter.drawLine(0, y, width(), y);
-}
-
-CalendarContentDrawer::CalendarContentDrawer(QWidget *parent):
-        SlotsPainter(50, 50, 7, 6, parent), baseLayer(new CalendarContentLayer) {
-}
-
-void CalendarContentDrawer::initLayers() {
-    appendLayer(baseLayer);
-}
-
-void CalendarContentDrawer::wheelEvent(QWheelEvent *event) {
-    auto* cd = wData->cast<MiniCalendarData>();
-    if (!cd) {
-        return;
-    }
-    if (event->angleDelta().y() > 0) {
-        cd->setTopLeftDate(cd->topLeftDate.addDays(-7));
-    } else {
-        cd->setTopLeftDate(cd->topLeftDate.addDays(7));
-    }
-}
-
-MiniCalendar::MiniCalendar(WeekDayTitleDrawer* t, CalendarContentDrawer* c, QWidget *parent): Widget(parent),
-    contentDrawer(c), titleDrawer(t), buttonPrev(), buttonNext(), title(), shouldInit(true) {
-}
-
-void MiniCalendar::onFinishedParsing(Handlers &handlers, NBT *widgetTag) {
-    handlers << [](QWidget* target) {
-        static_cast<MiniCalendar *>(target)->initCalendar();
-    };
-}
-
-void MiniCalendar::syncDataToWidget() {
-    if (wData) {
-        auto* cd = wData->cast<MiniCalendarData>();
-        title->setText(cd->mainMonth.toString("yyyy年M月"));
-        contentDrawer->baseLayer->firstDay = cd->topLeftDate.day();
-        contentDrawer->baseLayer->mainMonthBegin = cd->posMark1;
-        contentDrawer->baseLayer->mainMonthEnd = cd->posMark2;
-        contentDrawer->update();
-    }
-}
-
-void MiniCalendar::loadDate(const QDate &d) const {
-    if (wData) {
-        wData->cast<MiniCalendarData>()->setTopLeftDate(d);
-    }
-}
-
-void MiniCalendar::setData(WidgetData *d) {
-    if (dynamic_cast<MiniCalendarData*>(d)) {
-        Widget::setData(d);
-        contentDrawer->setData(d);
-    }
-}
-
-void MiniCalendar::initCalendar() {
-    if (shouldInit) {
-        init();
-        shouldInit = false;
-    }
-}
-
-void MiniCalendar::resizeEvent(QResizeEvent *event) {
-    initCalendar();
-}
-
-void MiniCalendar::connectModelView() {
-    dc << connect(wData, &WidgetData::sigDataChanged, this, [this](){
-        syncDataToWidget();
-    });
-}
-
-void MiniCalendar::init() {
-    WidgetFactoryStorage::get("widget_calendar")->apply(nullptr, this);
-    titleDrawer->setParent(this);
-    contentDrawer->setParent(this);
-    layout()->addWidget(titleDrawer);
-    layout()->addWidget(contentDrawer);
-    title = getPointer<TextLabel>("title");
-    buttonPrev = getPointer<ImgButton>("buttonPrev");
-    buttonNext = getPointer<ImgButton>("buttonNext");
-    connect(buttonPrev, &ImgButton::sigActivated, this, [this](){
-        if (wData) {
-            auto* cd = wData->cast<MiniCalendarData>();
-            auto d = cd->mainMonth.addMonths(-1);
-            d.setDate(d.year(), d.month(), 1);
-            cd->setTopLeftDate(d.addDays(1 - d.dayOfWeek()));
-        }
-    });
-    connect(buttonNext, &ImgButton::sigActivated, this, [this](){
-        if (wData) {
-            auto* cd = wData->cast<MiniCalendarData>();
-            auto d = cd->mainMonth.addMonths(1);
-            d.setDate(d.year(), d.month(), 1);
-            cd->setTopLeftDate(d.addDays(1 - d.dayOfWeek()));
-        }
-    });
+void TitleLayer::drawSlot(QPainter &p, QRect &area, int row, int column) {
+    p.drawText(area, Qt::AlignCenter, DateUtil::WEEKDAYS_CN[column]);
 }

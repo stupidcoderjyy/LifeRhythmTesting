@@ -42,19 +42,28 @@ ListItem * SlotsWidget::newItem() {
 
 void SlotsWidget::resizeEvent(QResizeEvent *event) {
     Widget::resizeEvent(event);
-    running = true;
+    if (wData) {
+        running = true;
+    }
     updateBase();
 }
 
 void SlotsWidget::connectModelView() {
     dc << connect(wData, &WidgetData::sigDataChanged, this, [this] {
-        auto* d = wData->cast<ListData>();
-        syncItems(d->getChangeBegin(), d->getChangeEnd());
+        if (wData) {
+            if (!running) {
+                running = true;
+                updateBase();
+            }
+            auto* d = wData->cast<ListData>();
+            syncItems(d->getChangeBegin(), d->getChangeEnd());
+        }
     });
 }
 
 void SlotsWidget::updateBase() {
-    if (!running) {
+    if (!running || !wData) {
+        running = false;
         return;
     }
     int oldSlotHeight = slotHeight, oldSlotWidth = slotWidth;

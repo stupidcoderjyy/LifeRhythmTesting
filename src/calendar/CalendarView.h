@@ -16,11 +16,15 @@ protected:
     QDate date;
     bool isToday;
     bool isCurrentMonth;
+    QRect outline;
 public:
     explicit CalendarItem(QWidget* parent = nullptr);
     void syncDataToWidget() override;
 protected:
+    void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent* event) override;
+private:
+    void updateOutline();
 };
 
 class CalendarView : public SlotsWidget {

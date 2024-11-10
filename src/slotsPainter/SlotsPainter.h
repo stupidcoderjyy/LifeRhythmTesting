@@ -27,10 +27,10 @@ public:
     explicit SlotsPainter(QWidget* parent = nullptr);
     void appendLayer(SlotsPainterLayer* layer);
     void insertLayer(int i, SlotsPainterLayer* layer);
+    void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     inline void setSlotSize(int width, int height);
-    inline void setColumns(int count);
-    inline void setRows(int count);
-    inline void setSlotSizePolicy(SlotSizePolicy vertical, SlotSizePolicy horizontal);
+    inline void setSlotCount(int columns, int rows);
+    inline void setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical);
     ~SlotsPainter() override;
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -50,17 +50,13 @@ inline void SlotsPainter::setSlotSize(int width, int height) {
     updateBase();
 }
 
-inline void SlotsPainter::setColumns(int count) {
-    columns = count;
+inline void SlotsPainter::setSlotCount(int c, int r) {
+    columns = c;
+    rows = r;
     updateBase();
 }
 
-inline void SlotsPainter::setRows(int count) {
-    rows = count;
-    updateBase();
-}
-
-inline void SlotsPainter::setSlotSizePolicy(SlotSizePolicy vertical, SlotSizePolicy horizontal) {
+inline void SlotsPainter::setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical) {
     vSlotSizePolicy = vertical;
     hSlotSizePolicy = horizontal;
     updateBase();

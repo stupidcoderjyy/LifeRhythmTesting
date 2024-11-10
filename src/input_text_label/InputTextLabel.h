@@ -11,12 +11,16 @@
 class InputTextLabel : public TextLabel {
 private:
     LineEdit* edit;
+    bool editing;
 public:
     explicit InputTextLabel(QWidget *parent = Q_NULLPTR);
 protected:
     virtual void initEditor();
     virtual void finishEditing();
     void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+private:
+    void stopEditing();
 };
 
 

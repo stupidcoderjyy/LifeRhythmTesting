@@ -24,9 +24,8 @@ protected:
 public:
     explicit SlotsWidget(QWidget *parent = nullptr);
     inline void setSlotSize(int width, int height);
-    inline void setColumns(int count);
-    inline void setRows(int count);
-    inline void setSlotSizePolicy(SlotSizePolicy vertical, SlotSizePolicy horizontal);
+    inline void setSlotCount(int columns, int rows);
+    inline void setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical);
 protected:
     virtual void prepareItem(ListItem* w);
     void syncItems(int begin, int end) const;
@@ -47,17 +46,13 @@ inline void SlotsWidget::setSlotSize(int width, int height) {
     updateBase();
 }
 
-inline void SlotsWidget::setColumns(int count) {
-    columns = count;
+inline void SlotsWidget::setSlotCount(int c, int r) {
+    columns = c;
+    rows = r;
     updateBase();
 }
 
-inline void SlotsWidget::setRows(int count) {
-    rows = count;
-    updateBase();
-}
-
-inline void SlotsWidget::setSlotSizePolicy(SlotSizePolicy vertical, SlotSizePolicy horizontal) {
+inline void SlotsWidget::setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical) {
     vSlotSizePolicy = vertical;
     hSlotSizePolicy = horizontal;
     updateBase();
