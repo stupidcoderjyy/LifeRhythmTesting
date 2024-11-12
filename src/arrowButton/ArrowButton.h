@@ -1,0 +1,38 @@
+//
+// Created by stupid_coder_jyy on 2024/2/28.
+//
+
+#ifndef ARROWBUTTON_H
+#define ARROWBUTTON_H
+
+#include "Button.h"
+#include "Widget.h"
+
+class ArrowButton : public Button {
+    Q_OBJECT
+public:
+    enum Type {
+        Right,
+        Down,
+        Left,
+        Up,
+        None
+    };
+private:
+    Type baseType;
+    Type activatedType;
+    Type showType;
+public:
+    explicit ArrowButton(QWidget* parent = nullptr);
+    void setActivatedType(Type t);
+    void setBaseType(Type t);
+    void setSelected(bool selected) override;
+    void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
+signals:
+    void sigActivated(bool pressed);
+private:
+    void updateBase();
+    static Type fromString(const QString &str);
+};
+
+#endif //LIFERHYTHM_ARROWBUTTON_H

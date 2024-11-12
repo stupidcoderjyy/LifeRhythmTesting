@@ -20,8 +20,8 @@ Label::Label(QWidget *parent): QLabel(parent), StandardWidget() {
 
 void Label::onPostParsing(Handlers &handlers, NBT *widgetTag) {
     WidgetFactory::parseTextWidget<QLabel>(handlers, widgetTag);
-    if (widgetTag->contains("img", Data::STRING)) {
-        auto loc = Identifier(widgetTag->getString("img"));
+    if (widgetTag->contains("images", Data::STRING)) {
+        auto loc = Identifier(widgetTag->getString("images"));
         QPixmap img{};
         if (ImageStorage::exists(loc)) {
             img = *ImageStorage::get(loc);

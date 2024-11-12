@@ -36,6 +36,16 @@ int main(int argc, char* argv[]) {
             qDebug() << "cancelled";
         });
 
+        auto b3 = new Button(parent);
+        b3->setButtonImg(*ImageStorage::get("lr:pen_30x30"));
+        b3->setButtonMode(Button::SelectClick);
+        QObject::connect(b3, &Button::sigSelected, [] {
+            qDebug() << "selected";
+        });
+        QObject::connect(b3, &Button::sigCancelled, [] {
+            qDebug() << "cancelled";
+        });
+
         QTimer::singleShot(1000, [b2] {
             b2->setSelected(true);
         });
@@ -45,6 +55,7 @@ int main(int argc, char* argv[]) {
 
         layout->addWidget(b1);
         layout->addWidget(b2);
+        layout->addWidget(b3);
         parent->show();
     });
     return lr.launch();

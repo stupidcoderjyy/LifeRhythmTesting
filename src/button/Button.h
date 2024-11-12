@@ -12,18 +12,24 @@ class Button : public Label {
 public:
     enum Mode {
         Click,
-        Select
+        Select,
+        SelectClick
     };
-private:
+protected:
     bool running;
     bool selected;
+    bool hasStyle;
+    bool activatedOnPress;
     Mode type;
 public:
     explicit Button(QWidget* parent);
     void setButtonText(const QString& text);
     void setButtonImg(const QPixmap& pixmap);
-    void setButtonMode(Mode type);
-    void setSelected(bool selected);
+    inline void setButtonMode(Mode type);
+    inline void setButtonStyleEnabled(bool enabled);
+    inline void setActivateOnPress(bool aop);
+    virtual void setSelected(bool selected);
+    void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
 signals:
     void sigActivated();
     void sigSelected();
@@ -33,6 +39,20 @@ protected:
     void mouseReleaseEvent(QMouseEvent *ev) override;
     void mousePressEvent(QMouseEvent *ev) override;
     void leaveEvent(QEvent *event) override;
+private:
+    void handleButtonActivate(QMouseEvent* ev);
 };
+
+inline void Button::setButtonMode(Mode t) {
+    type = t;
+}
+
+inline void Button::setButtonStyleEnabled(bool enabled) {
+    hasStyle = enabled;
+}
+
+inline void Button::setActivateOnPress(bool aop) {
+    activatedOnPress = aop;
+}
 
 #endif //LIFERHYTHM_TEXTBUTTON_H

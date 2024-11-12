@@ -12,10 +12,11 @@ set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testButton.cpp)
+set(TEST_ENTRYPOINT testArrowButton.cpp)
 
 set(INCLUDES
         src/button
+        src/arrowButton
 #        src/calendar
 #        src/input_text_label
 #        src/jbTextButton
@@ -31,6 +32,8 @@ set(SRC_FILES
         src/label/Label.cpp
         src/button/Button.cpp
         src/button/Button.h
+        src/arrowButton/ArrowButton.cpp
+        src/arrowButton/ArrowButton.h
 )
 
 #把LR自带的资源

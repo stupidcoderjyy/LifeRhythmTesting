@@ -4,17 +4,19 @@
 
 #include "Button.h"
 
+#include <NBT.h>
+
 #include "Styles.h"
 #include "WidgetUtil.h"
 #include "QMouseEvent"
 #include "FocusManager.h"
 
-#define qssNormal bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px")
-#define qssHovered bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px")
-#define qssPressed bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px")
-#define qssSelected bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px")
+auto qssNormal = bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+auto qssHovered = bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+auto qssPressed = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+auto qssSelected = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
 
-Button::Button(QWidget *parent) : Label(parent), running(), type(Click) {
+Button::Button(QWidget *parent): Label(parent), running(), selected(), hasStyle(true), activatedOnPress(), type(Click) {
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
 
@@ -30,47 +32,92 @@ void Button::setButtonImg(const QPixmap &p) {
     setPixmap(p);
 }
 
-void Button::setButtonMode(Mode t) {
-    type = t;
-}
-
 void Button::setSelected(bool s) {
-    if (type == Select && selected != s) {
+    if (selected == s || type == Click) {
+        return;
+    }
+    selected = s;
+    if (s) {
+        emit sigSelected();
+    } else {
+        emit sigCancelled();
+    }
+    if (!hasStyle) {
+        return;
+    }
+    if (type == Select) {
         if (s) {
             setStyleSheet(qssSelected);
-            emit sigSelected();
+        } else if (isMouseHovered(this)) {
+            setStyleSheet(qssHovered);
         } else {
             setStyleSheet(qssNormal);
-            emit sigCancelled();
         }
-        selected = s;
     }
 }
 
+void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
+    Label::onPostParsing(handlers, widgetTag);
+    Mode mode = Click;
+    auto modeStr = widgetTag->getString("mode");
+    if (modeStr == "Select") {
+        mode = Select;
+    } else if (modeStr == "SelectClick") {
+        mode = SelectClick;
+    }
+    bool styleEnabled = widgetTag->getBool("styleEnabled", true);
+    bool activeOnPress = widgetTag->getBool("activeOnPress", false);
+    handlers << [mode, styleEnabled, activeOnPress](QWidget* w) {
+        auto b = static_cast<Button*>(w);
+        b->setButtonMode(mode);
+        b->setButtonStyleEnabled(styleEnabled);
+        b->setActivateOnPress(activeOnPress);
+    };
+}
+
 void Button::enterEvent(QEvent *event) {
-    if (type == Click || !selected) {
+    if (hasStyle && (type != Select || !selected)) {
         setStyleSheet(qssHovered);
     }
 }
 
 void Button::mouseReleaseEvent(QMouseEvent *ev) {
-    if (isHovered(this, ev)) {
-        if (type == Click) {
-            emit sigActivated();
-            setStyleSheet(qssHovered);
-        } else {
-            setSelected(!selected);
-        }
+    if (!activatedOnPress) {
+        handleButtonActivate(ev);
     }
 }
 
 void Button::mousePressEvent(QMouseEvent *ev) {
-    setStyleSheet(qssPressed);
+    if (hasStyle) {
+        setStyleSheet(qssPressed);
+    }
     FocusManager::mark(this);
+    if (activatedOnPress) {
+        handleButtonActivate(ev);
+    }
 }
 
 void Button::leaveEvent(QEvent *event) {
-    if (type == Click || !selected) {
+    if (hasStyle && (type != Select || !selected)) {
         setStyleSheet(qssNormal);
+    }
+}
+
+void Button::handleButtonActivate(QMouseEvent *ev) {
+    if (!isHovered(this, ev)) {
+        return;
+    }
+    if (type == Click) {
+        emit sigActivated();
+    } else {
+        setSelected(!selected);
+    }
+    if (!hasStyle) {
+        return;
+    }
+    if (type == Click) {
+        setStyleSheet(qssHovered);
+    } else if (type == SelectClick) {
+        setStyleSheet(qssHovered);
     }
 }
