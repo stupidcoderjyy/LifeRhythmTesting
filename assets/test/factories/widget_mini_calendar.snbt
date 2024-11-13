@@ -1,0 +1,44 @@
+{
+    children: ["top", "bottom"]
+    h_size_policy: "Max"
+    v_size_policy: "Min"
+    layout: {
+        type: "Vertical"
+        spacing: 0
+        margins: [0,0,0,0]
+    }
+    top: {
+        children: ["prev", "title", "next"]
+        fixed_height: 40
+        qss: "bg(GRAY_0) bd_b('1px', 'solid', BLACK)"
+        layout: {
+            type: "Horizontal"
+            margins: [0,0,10,0]
+            spacing: 10
+        }
+        title: {
+            type: "Button"
+            pointer: true
+        }
+        prev: {
+            type: "ArrowButton"
+            base: "Left"
+            activated: "Left"
+            pointer: true
+        }
+        next: {
+            type: "ArrowButton"
+            base: "Right"
+            activated: "Right"
+            pointer: true
+        }
+    }
+    bottom: {
+        layout: {
+            type: "Horizontal"
+            margins: [0,0,0,0]
+            spacing: 0
+        }
+        pointer: true
+    }
+}

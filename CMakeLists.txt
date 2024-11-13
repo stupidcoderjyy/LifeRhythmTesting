@@ -21,8 +21,8 @@ set(INCLUDES
 #        src/input_text_label
 #        src/jbTextButton
         src/label
-#        src/miniCalendar
-#        src/slotsPainter
+        src/miniCalendar
+        src/slotsPainter
 #        src/slotsWidget
 #        src/xyplot
 )
@@ -34,6 +34,10 @@ set(SRC_FILES
         src/button/Button.h
         src/arrowButton/ArrowButton.cpp
         src/arrowButton/ArrowButton.h
+        src/miniCalendar/MiniCalendar.cpp
+        src/miniCalendar/MiniCalendar.h
+        src/slotsPainter/SlotsPainter.cpp
+        src/slotsPainter/SlotsPainter.h
 )
 
 #把LR自带的资源
