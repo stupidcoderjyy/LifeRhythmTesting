@@ -3,14 +3,12 @@
 //
 
 #include "SlotsPainter.h"
-
 #include <NBT.h>
-
 #include "MemUtil.h"
 #include <QMouseEvent>
 
-SlotsPainter::SlotsPainter(QWidget *parent): Widget(parent), slotWidth(), running(false),
-        slotHeight(), columns(), rows(), hSlotSizePolicy(Auto), vSlotSizePolicy(Auto) {
+SlotsPainter::SlotsPainter(QWidget *parent): Widget(parent), slotWidth(), slotHeight(),
+        columns(), rows(), running(false), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
 }
 
 void SlotsPainter::appendLayer(SlotsPainterLayer *layer) {
@@ -27,6 +25,15 @@ void SlotsPainter::insertLayer(int i, SlotsPainterLayer *layer) {
     if (running) {
         update();
     }
+}
+
+void SlotsPainter::removeLayer(SlotsPainterLayer* layer) {
+    int i = layers.indexOf(layer);
+    if (i < 0) {
+        return;
+    }
+    auto* l = layers.takeAt(i);
+    l->parent = nullptr;
 }
 
 void SlotsPainter::onPostParsing(Handlers &handlers, NBT *widgetTag) {
@@ -79,7 +86,7 @@ void SlotsPainter::paintEvent(QPaintEvent *event) {
         l->beforeDrawing(p);
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
-                l->drawSlot(p, area, r, c);
+                l->drawSlot(p, area, c, r);
                 area.translate(slotWidth, 0);
             }
             area.translate(-area.x(), slotHeight);
@@ -96,10 +103,20 @@ void SlotsPainter::resizeEvent(QResizeEvent *event) {
 
 void SlotsPainter::mousePressEvent(QMouseEvent *event) {
     auto p = event->pos();
-    onSlotClicked(event, p.y() / slotHeight, p.x() / slotWidth);
+    int r = p.y() / slotHeight, c = p.x() / slotWidth;
+    for (auto l : layers) {
+        l->mousePressed(c, r);
+    }
+    emit sigPressSlot(c, r);
 }
 
-void SlotsPainter::onSlotClicked(QMouseEvent* evt, int row, int column) {
+void SlotsPainter::mouseReleaseEvent(QMouseEvent *event) {
+    auto p = event->pos();
+    int r = p.y() / slotHeight, c = p.x() / slotWidth;
+    for (auto l : layers) {
+        l->mouseReleased(c, r);
+    }
+    emit sigReleaseSlot(c, r);
 }
 
 void SlotsPainter::updateBase() {
@@ -126,8 +143,14 @@ bool SlotsPainterLayer::shouldDraw() {
 void SlotsPainterLayer::beforeDrawing(QPainter &p) {
 }
 
-void SlotsPainterLayer::drawSlot(QPainter &p, QRect &area, int row, int column) {
+void SlotsPainterLayer::drawSlot(QPainter &p, QRect &area, int column, int row) {
 }
 
 void SlotsPainterLayer::afterDrawing(QPainter &p) {
+}
+
+void SlotsPainterLayer::mousePressed(int column, int row) {
+}
+
+void SlotsPainterLayer::mouseReleased(int column, int row) {
 }

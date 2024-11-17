@@ -5,16 +5,22 @@
 #ifndef MINICALENDAR_H
 #define MINICALENDAR_H
 
+#include <qboxlayout.h>
+
 #include "Widget.h"
 #include "TextLabel.h"
-#include "ImgButton.h"
 #include "SlotsPainter.h"
 #include <QDateTime>
+#include "ArrowButton.h"
 
 class ContentLayer;
 class TitleLayer;
-class ArrowButton;
-class Button;
+
+enum ViewLevel {
+    Day,
+    Month,
+    Year
+};
 
 class MiniCalendar : public Widget {
 private:
@@ -24,57 +30,56 @@ private:
     ContentLayer* layerContent;
     TitleLayer* layerTitle;
     SlotsPainter* painterWeekdayTitle;
-    SlotsPainter* painterContent;
+    SlotsPainter* painters[3];
+    QVBoxLayout* bottom;
+    ViewLevel viewLevel;
     bool running;
 public:
-    MiniCalendar(QWidget* parent = nullptr);
+    explicit MiniCalendar(QWidget* parent = nullptr);
+    void loadDate(const QDate& date) const;
+    void syncDataToWidget() override;
 protected:
-    void resizeEvent(QResizeEvent *event) override;
     void connectModelView() override;
 private:
     void init();
+    void onViewLevelChanged(ViewLevel level);
 };
 
 class MiniCalendarData : public WidgetData {
     friend class MiniCalendar;
-public:
-    enum ViewLevel {
-        Day,
-        Month,
-        Year
-    };
 private:
     ViewLevel viewLevel;
-    QDate topLeftDate;
+    QDate topLeft;
     QDate titleDate;
-    int mark1, mark2;
+    int mark1, mark2, mark3;
     int firstVal;
-public:
+private:
     MiniCalendarData();
     void setViewLevel(ViewLevel level);
     void setTopLeft(const QDate& d);
-private:
-    void updateData();
+    void ensureTopLeft(const QDate& date);
 };
 
 class ContentLayer : public SlotsPainterLayer {
 private:
     int firstVal;
-    int mark1, mark2;
+    int mark1, mark2, mark3, mark4;
     int val, count;
-    MiniCalendarData::ViewLevel viewLevel;
+    int rx, ry;
+    ViewLevel viewLevel;
 public:
     ContentLayer();
-    void setVal(MiniCalendarData::ViewLevel viewLevel, int firstVal, int mark1, int mark2);
+    void setVal(ViewLevel viewLevel, int firstVal, int mark1, int mark2, int mark3);
 protected:
     void beforeDrawing(QPainter &p) override;
-    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
+    void drawSlot(QPainter &p, QRect &area, int column, int row) override;
+    void mousePressed(int column, int row) override;
 };
 
 class TitleLayer : public SlotsPainterLayer {
 protected:
     void beforeDrawing(QPainter &p) override;
-    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
+    void drawSlot(QPainter &p, QRect &area, int column, int row) override;
 };
 
 #endif //LIFERHYTHM_CALENDAR_H

@@ -56,12 +56,16 @@ void ArrowButton::onPostParsing(Handlers &handlers, NBT *widgetTag) {
 }
 
 void ArrowButton::updateBase() {
-    auto rArrow = *ImageStorage::get("lr:arrow_30x30");
+    auto rArrow = ImageStorage::get("lr:arrow_30x30");
     Type to = selected ? activatedType : baseType;
     if (showType != to) {
         QTransform t;
         t.rotate(to * 90);
-        setButtonImg(rArrow.transformed(t));
+        if (enabled) {
+            setButtonImg(rArrow->transformed(t), imgDisabled);
+        } else {
+            setButtonImg(imgNormal, rArrow->transformed(t));
+        }
         showType = to;
     }
 }

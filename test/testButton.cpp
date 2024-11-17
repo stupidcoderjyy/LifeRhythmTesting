@@ -27,8 +27,9 @@ int main(int argc, char* argv[]) {
         });
 
         auto b2 = new Button(parent);
-        b2->setButtonImg(*ImageStorage::get("lr:reload_30x30"));
+        b2->setButtonImg(*ImageStorage::get("lr:plus_30x30"), *ImageStorage::get("lr:minus_30x30"));
         b2->setButtonMode(Button::Select);
+        b2->setSelected(true);
         QObject::connect(b2, &Button::sigSelected, [] {
             qDebug() << "selected";
         });
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
         });
 
         auto b3 = new Button(parent);
-        b3->setButtonImg(*ImageStorage::get("lr:pen_30x30"));
+        b3->setButtonImg(*ImageStorage::get("lr:plus_30x30"), *ImageStorage::get("lr:minus_30x30"));
         b3->setButtonMode(Button::SelectClick);
         QObject::connect(b3, &Button::sigSelected, [] {
             qDebug() << "selected";
@@ -46,12 +47,17 @@ int main(int argc, char* argv[]) {
             qDebug() << "cancelled";
         });
 
-        QTimer::singleShot(1000, [b2] {
-            b2->setSelected(true);
+        QTimer::singleShot(1000, [b1, b2, b3] {
+            b1->setButtonEnabled(false);
+            b2->setButtonEnabled(false);
+            b3->setButtonEnabled(false);
         });
-        QTimer::singleShot(2000, [b2] {
-            b2->setSelected(false);
+        QTimer::singleShot(5000, [b1, b2, b3] {
+            b1->setButtonEnabled(true);
+            b2->setButtonEnabled(true);
+            b3->setButtonEnabled(true);
         });
+
 
         layout->addWidget(b1);
         layout->addWidget(b2);

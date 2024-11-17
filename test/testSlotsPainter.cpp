@@ -34,8 +34,7 @@ int main(int argc, char* argv[]) {
         parent->setLayout(layout);
 
         auto sw = new SlotsPainter(parent);
-        sw->setColumns(5);
-        sw->setRows(3);
+        sw->setSlotCount(5, 3);
         sw->setMinimumSize(200, 200);
         sw->setSizePolicy(QSizePolicy:: Minimum, QSizePolicy::Minimum);
         sw->appendLayer(new TestLayer);

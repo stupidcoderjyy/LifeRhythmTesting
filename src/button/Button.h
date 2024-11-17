@@ -2,8 +2,8 @@
 // Created by stupid_coder_jyy on 2024/3/12.
 //
 
-#ifndef LIFERHYTHM_TEXTBUTTON_H
-#define LIFERHYTHM_TEXTBUTTON_H
+#ifndef BUTTON_H
+#define BUTTON_H
 
 #include "Label.h"
 
@@ -20,13 +20,17 @@ protected:
     bool selected;
     bool hasStyle;
     bool activatedOnPress;
+    bool hasImg;
+    bool enabled;
     Mode type;
+    QPixmap imgNormal, imgDisabled;
 public:
     explicit Button(QWidget* parent);
     void setButtonText(const QString& text);
-    void setButtonImg(const QPixmap& pixmap);
+    void setButtonImg(const QPixmap& p1, const QPixmap& p2 = {});
+    void setButtonEnabled(bool e = true);
     inline void setButtonMode(Mode type);
-    inline void setButtonStyleEnabled(bool enabled);
+    void setButtonStyleEnabled(bool enabled);
     inline void setActivateOnPress(bool aop);
     virtual void setSelected(bool selected);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
@@ -47,12 +51,8 @@ inline void Button::setButtonMode(Mode t) {
     type = t;
 }
 
-inline void Button::setButtonStyleEnabled(bool enabled) {
-    hasStyle = enabled;
-}
-
 inline void Button::setActivateOnPress(bool aop) {
     activatedOnPress = aop;
 }
 
-#endif //LIFERHYTHM_TEXTBUTTON_H
+#endif //BUTTON_H

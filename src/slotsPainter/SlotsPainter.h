@@ -11,6 +11,7 @@
 class SlotsPainterLayer;
 
 class SlotsPainter : public Widget {
+    Q_OBJECT
 public:
     enum SlotSizePolicy {
         Fixed,
@@ -27,16 +28,20 @@ public:
     explicit SlotsPainter(QWidget* parent = nullptr);
     void appendLayer(SlotsPainterLayer* layer);
     void insertLayer(int i, SlotsPainterLayer* layer);
+    void removeLayer(SlotsPainterLayer* layer);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     inline void setSlotSize(int width, int height);
     inline void setSlotCount(int columns, int rows);
     inline void setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical);
     ~SlotsPainter() override;
+signals:
+    void sigPressSlot(int column, int row);
+    void sigReleaseSlot(int column, int row);
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    virtual void onSlotClicked(QMouseEvent* evt, int row, int column);
+    void mouseReleaseEvent(QMouseEvent *event) override;
 private:
     void updateBase();
 };
@@ -72,8 +77,10 @@ public:
 protected:
     virtual bool shouldDraw();
     virtual void beforeDrawing(QPainter& p);
-    virtual void drawSlot(QPainter& p, QRect& area, int row, int column);
+    virtual void drawSlot(QPainter& p, QRect& area, int column, int row);
     virtual void afterDrawing(QPainter& p);
+    virtual void mousePressed(int column, int row);
+    virtual void mouseReleased(int column, int row);
 };
 
 #endif //LIFERHYTHM_SLOTSDRAWER_H

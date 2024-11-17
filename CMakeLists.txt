@@ -12,7 +12,7 @@ set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testArrowButton.cpp)
+set(TEST_ENTRYPOINT testMiniCalendar.cpp)
 
 set(INCLUDES
         src/button
@@ -28,16 +28,26 @@ set(INCLUDES
 )
 
 set(SRC_FILES
-        src/label/Label.h
-        src/label/Label.cpp
-        src/button/Button.cpp
-        src/button/Button.h
         src/arrowButton/ArrowButton.cpp
         src/arrowButton/ArrowButton.h
+        src/button/Button.cpp
+        src/button/Button.h
+#        src/calendar/Calendar.cpp
+#        src/calendar/Calendar.h
+#        src/calendar/CalendarView.cpp
+#        src/calendar/CalendarView.h
+#        src/input_text_label/InputTextLabel.cpp
+#        src/input_text_label/InputTextLabel.h
+#        src/jbTextButton/JbTextButton.cpp
+#        src/jbTextButton/JbTextButton.h
+        src/label/Label.h
+        src/label/Label.cpp
         src/miniCalendar/MiniCalendar.cpp
         src/miniCalendar/MiniCalendar.h
         src/slotsPainter/SlotsPainter.cpp
         src/slotsPainter/SlotsPainter.h
+#        src/slotsWidget/SlotsWidget.cpp
+#        src/slotsWidget/SlotsWidget.h
 )
 
 #把LR自带的资源
