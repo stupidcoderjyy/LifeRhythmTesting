@@ -119,6 +119,10 @@ void SlotsPainter::mouseReleaseEvent(QMouseEvent *event) {
     emit sigReleaseSlot(c, r);
 }
 
+void SlotsPainter::wheelEvent(QWheelEvent *event) {
+    emit sigScroll(event->angleDelta().y());
+}
+
 void SlotsPainter::updateBase() {
     if (!running) {
         return;

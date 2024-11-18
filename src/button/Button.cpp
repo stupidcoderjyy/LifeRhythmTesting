@@ -19,14 +19,13 @@ auto qssSelectedDisabled = bg(Styles::CLEAR->rgbHex) + bd("2px", "solid", Styles
 
 Button::Button(QWidget *parent): Label(parent), running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
                                  enabled(true), type(Click) {
-    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    setAlignment(Qt::AlignCenter);
 }
 
 void Button::setButtonText(const QString &text) {
     hasImg = false;
     QFontMetrics metrics(font());
-    setFixedHeight(metrics.height() + 10);
-    setFixedWidth(metrics.horizontalAdvance(text) + 10);
+    setMinimumSize(metrics.horizontalAdvance(text) + 10, metrics.height() + 10);
     setText(text);
 }
 
@@ -92,11 +91,7 @@ void Button::setSelected(bool s) {
         return;
     }
     selected = s;
-    if (s) {
-        emit sigSelected();
-    } else {
-        emit sigCancelled();
-    }
+    emit sigSelected(s);
     if (!hasStyle) {
         return;
     }
@@ -113,21 +108,30 @@ void Button::setSelected(bool s) {
 
 void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
     Label::onPostParsing(handlers, widgetTag);
-    Mode mode = Click;
-    auto modeStr = widgetTag->getString("mode");
-    if (modeStr == "Select") {
-        mode = Select;
-    } else if (modeStr == "SelectClick") {
-        mode = SelectClick;
+    if (widgetTag->contains("mode", Data::STRING)) {
+        Mode mode = Click;
+        auto modeStr = widgetTag->getString("mode");
+        if (modeStr == "Select") {
+            mode = Select;
+        } else if (modeStr == "SelectClick") {
+            mode = SelectClick;
+        }
+        handlers << [mode](QWidget* w) {
+            static_cast<Button*>(w)->setButtonMode(mode);
+        };
     }
-    bool styleEnabled = widgetTag->getBool("styleEnabled", true);
-    bool activeOnPress = widgetTag->getBool("activeOnPress", false);
-    handlers << [mode, styleEnabled, activeOnPress](QWidget* w) {
-        auto b = static_cast<Button*>(w);
-        b->setButtonMode(mode);
-        b->setButtonStyleEnabled(styleEnabled);
-        b->setActivateOnPress(activeOnPress);
-    };
+    if (widgetTag->contains("styleEnabled", Data::BOOL)) {
+        bool styleEnabled = widgetTag->getBool("styleEnabled");
+        handlers << [styleEnabled](QWidget* w) {
+            static_cast<Button*>(w)->setButtonStyleEnabled(styleEnabled);
+        };
+    }
+    if (widgetTag->contains("activeOnPress", Data::BOOL)) {
+        bool activeOnPress = widgetTag->getBool("activeOnPress");
+        handlers << [activeOnPress](QWidget* w) {
+            static_cast<Button*>(w)->setActivateOnPress(activeOnPress);
+        };
+    }
 }
 
 void Button::enterEvent(QEvent *event) {

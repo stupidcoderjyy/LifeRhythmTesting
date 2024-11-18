@@ -19,10 +19,19 @@ int main(int argc, char* argv[]) {
     });
     lr.onPostInit([] {
         auto parent = new QWidget;
-        auto layout = new QVBoxLayout(parent);
+        auto layout = new QHBoxLayout(parent);
 
-        auto mc = new MiniCalendar(parent);
-        layout->addWidget(mc);
+        auto mc1 = new MiniCalendar(parent);
+
+        auto mc2 = new MiniCalendar(parent);
+        mc2->setMaxViewLevel(Year);
+
+        auto mc3 = new MiniCalendar(parent);
+        mc3->setMaxViewLevel(Month);
+
+        layout->addWidget(mc1);
+        layout->addWidget(mc2);
+        layout->addWidget(mc3);
         parent->setLayout(layout);
         parent->show();
     });

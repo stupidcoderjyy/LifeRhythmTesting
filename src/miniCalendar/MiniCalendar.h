@@ -17,13 +17,13 @@ class ContentLayer;
 class TitleLayer;
 
 enum ViewLevel {
-    Day,
+    Year,
     Month,
-    Year
+    Day
 };
 
 class MiniCalendar : public Widget {
-private:
+protected:
     ArrowButton* prev;
     ArrowButton* next;
     Button* title;
@@ -33,16 +33,19 @@ private:
     SlotsPainter* painters[3];
     QVBoxLayout* bottom;
     ViewLevel viewLevel;
+    ViewLevel maxViewLevel;
     bool running;
 public:
     explicit MiniCalendar(QWidget* parent = nullptr);
     void loadDate(const QDate& date) const;
-    void syncDataToWidget() override;
+    void setMaxViewLevel(ViewLevel level);
 protected:
+    void syncDataToWidget() override;
     void connectModelView() override;
 private:
     void init();
     void onViewLevelChanged(ViewLevel level);
+    void handleArrowButton(bool add);
 };
 
 class MiniCalendarData : public WidgetData {

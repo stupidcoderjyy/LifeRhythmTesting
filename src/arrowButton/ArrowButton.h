@@ -28,8 +28,6 @@ public:
     void setBaseType(Type t);
     void setSelected(bool selected) override;
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
-signals:
-    void sigActivated(bool pressed);
 private:
     void updateBase();
     static Type fromString(const QString &str);

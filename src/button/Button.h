@@ -36,8 +36,7 @@ public:
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
 signals:
     void sigActivated();
-    void sigSelected();
-    void sigCancelled();
+    void sigSelected(bool selected);
 protected:
     void enterEvent(QEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *ev) override;
