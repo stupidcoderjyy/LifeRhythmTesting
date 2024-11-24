@@ -9,46 +9,38 @@
 #include <QLayout>
 #include <QPainterPath>
 
-MiniCalendar::MiniCalendar(QWidget *parent): Widget(parent), prev(), next(), title(), layerContent(), layerTitle(),
-                                             painterWeekdayTitle(), painters(), bottom(), viewLevel(Day), running(),
-                                             maxViewLevel(Day) {
-    init();
+MiniCalendar::MiniCalendar(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor),
+        prev(), next(), title(), layerContent(), painterWeekdayTitle(), painters(),
+        layerTitle(), bottom(), viewLevel(Day), maxViewLevel(Day) {
+    close();
 }
 
-void MiniCalendar::loadDate(const QDate &date) const {
-    if (wData) {
-        auto cd = wData->cast<MiniCalendarData>();
-        cd->setTopLeft(QDate(date.year(), date.month(), 1));
-    }
+void MiniCalendar::loadDate(const QDate &date) {
+    dateTopLeft = QDate(date.year(), date.month(), 1);
+    syncWidgetToData();
 }
 
 void MiniCalendar::setMaxViewLevel(ViewLevel level) {
     maxViewLevel = level;
-    if (viewLevel > maxViewLevel) {
-        wData->cast<MiniCalendarData>()->setViewLevel(maxViewLevel);
-    }
+    syncWidgetToData();
 }
 
 void MiniCalendar::syncDataToWidget() {
     auto cd = wData->cast<MiniCalendarData>();
-    layerContent->setVal(cd->viewLevel, cd->firstVal, cd->mark1, cd->mark2, cd->mark3);
-    switch (cd->viewLevel) {
-        case Day: {
-            title->setButtonText(cd->titleDate.toString("yyyy年M月"));
-            break;
-        }
-        case Month: {
-            title->setButtonText(cd->titleDate.toString("yyyy年"));
-            break;
-        }
-        case Year: {
-            int y = cd->titleDate.year();
-            y = y - y % 10;
-            title->setButtonText(QString("%1 - %2").arg(y).arg(y + 9));
-            break;
-        }
+    layerContent->setVal(maxViewLevel, cd->viewLevel, cd->firstVal, cd->mark1, cd->mark2, cd->mark3);
+    if (viewLevel != cd->viewLevel) {
+        setViewLevel(cd->viewLevel);
     }
-    onViewLevelChanged(cd->viewLevel);
+    dateTitle = cd->dateTitle;
+    updateTitle();
+    dateTopLeft = cd->topLeft;
+}
+
+void MiniCalendar::syncWidgetToData() {
+    if (auto cd = wData->cast<MiniCalendarData>()) {
+        ensureTopLeft();
+        cd->set(qMin(viewLevel, maxViewLevel), dateTopLeft);
+    }
 }
 
 void MiniCalendar::connectModelView() {
@@ -63,36 +55,20 @@ void MiniCalendar::connectModelView() {
 #define WIDTH 7 * SLOT_SIZE_1
 #define HEIGHT 8 * SLOT_SIZE_1
 
-void MiniCalendar::init() {
-    if (running) {
-        return;
-    }
+void MiniCalendar::initWidget() {
     setFixedSize(WIDTH, HEIGHT);
-    running = true;
     WidgetFactoryStorage::get("test:widget_mini_calendar")->apply(nullptr, this);
     prev = getPointer<ArrowButton>("prev");
-    connect(prev, &ArrowButton::sigSelected, this, [this](){
+    connect(prev, &ArrowButton::sigSelected, this, [this] {
         handleArrowButton(false);
     });
     next = getPointer<ArrowButton>("next");
-    connect(next, &ArrowButton::sigSelected, this, [this](){
+    connect(next, &ArrowButton::sigSelected, this, [this] {
         handleArrowButton(true);
     });
     title = getPointer<Button>("title");
     connect(title, &Button::sigActivated, this, [this] {
-        auto cd = wData->cast<MiniCalendarData>();
-        switch (cd->viewLevel) {
-            case Day:
-                cd->setViewLevel(Month);
-                break;
-            case Month:
-                cd->setViewLevel(Year);
-                title->setButtonStyleEnabled(false);
-                title->setButtonEnabled(false);
-                break;
-            default:
-                break;
-        }
+        handleButtonTitle();
     });
     getPointer<Widget>("top")->setFixedHeight(SLOT_SIZE_1);
     layerTitle = new TitleLayer;
@@ -107,12 +83,7 @@ void MiniCalendar::init() {
     painterDay->setSlotCount(7, 6);
     painterDay->appendLayer(layerContent);
     connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
-        auto cd = wData->cast<MiniCalendarData>();
-        if (dy < 0) {
-            cd->setTopLeft(cd->topLeft.addDays(7));
-        } else {
-            cd->setTopLeft(cd->topLeft.addDays(-7));
-        }
+        handlePainterScroll(dy < 0);
     });
 
     auto *painterMonth = new SlotsPainter(this);
@@ -121,18 +92,13 @@ void MiniCalendar::init() {
     painterMonth->close();
     connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
         if (maxViewLevel == Day) {
-            auto cd = wData->cast<MiniCalendarData>();
-            cd->topLeft = cd->topLeft.addMonths((r << 2) + c);
-            cd->setViewLevel(Day);
+            dateTopLeft = dateTopLeft.addMonths((r << 2) + c);
+            setViewLevel(Day);
+            syncWidgetToData();
         }
     });
     connect(painterMonth, &SlotsPainter::sigScroll, this, [this](int dy){
-        auto cd = wData->cast<MiniCalendarData>();
-        if (dy < 0) {
-            cd->setTopLeft(cd->topLeft.addMonths(4));
-        } else {
-            cd->setTopLeft(cd->topLeft.addMonths(-4));
-        }
+        handlePainterScroll(dy < 0);
     });
 
     auto *painterYear = new SlotsPainter(this);
@@ -140,19 +106,14 @@ void MiniCalendar::init() {
     painterYear->setSlotCount(4, 4);
     painterYear->close();
     connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
-        auto cd = wData->cast<MiniCalendarData>();
-        cd->topLeft = cd->topLeft.addYears((r << 2) + c);
         if (maxViewLevel > Year) {
-            cd->setViewLevel(Month);
+            dateTopLeft = dateTopLeft.addYears((r << 2) + c);
+            setViewLevel(Month);
+            syncWidgetToData();
         }
     });
     connect(painterYear, &SlotsPainter::sigScroll, this, [this](int dy){
-        auto cd = wData->cast<MiniCalendarData>();
-        if (dy < 0) {
-            cd->setTopLeft(cd->topLeft.addYears(4));
-        } else {
-            cd->setTopLeft(cd->topLeft.addYears(-4));
-        }
+        handlePainterScroll(dy < 0);
     });
 
     painters[Day] = painterDay;
@@ -165,53 +126,125 @@ void MiniCalendar::init() {
     auto d = new MiniCalendarData;
     setData(d);
     loadDate(QDate::currentDate());
-    if (viewLevel < maxViewLevel) {
-        d->setViewLevel(maxViewLevel);
-    }
+    show();
 }
 
-void MiniCalendar::onViewLevelChanged(ViewLevel level) {
-    if (viewLevel == level) {
-        return;
-    }
-    if (viewLevel == Year) {
-        title->setButtonEnabled(true);
-    }
+void MiniCalendar::setViewLevel(ViewLevel levelNew) {
+    title->setButtonStyleEnabled(levelNew != Year);
+    title->setButtonEnabled(levelNew != Year);
     if (viewLevel == Day) {
         bottom->removeWidget(painterWeekdayTitle);
         painterWeekdayTitle->close();
     }
     painters[viewLevel]->close();
     painters[viewLevel]->removeLayer(layerContent);
-    if (level == Day) {
+    if (levelNew == Day) {
         bottom->replaceWidget(painters[viewLevel], painterWeekdayTitle);
         bottom->addWidget(painters[Day]);
         painterWeekdayTitle->show();
     } else {
-        bottom->replaceWidget(painters[viewLevel], painters[level]);
+        bottom->replaceWidget(painters[viewLevel], painters[levelNew]);
     }
-    painters[level]->appendLayer(layerContent);
-    painters[level]->show();
-    viewLevel = level;
+    painters[levelNew]->appendLayer(layerContent);
+    painters[levelNew]->show();
+    viewLevel = levelNew;
+    switch (levelNew) {
+        case Day: {
+            dateTopLeft.setDate(dateTopLeft.year(), dateTopLeft.month(), 1);
+            break;
+        }
+        case Month: {
+            dateTopLeft.setDate(dateTopLeft.year(), 1, 1);
+            break;
+        }
+        default: {
+            dateTopLeft.setDate(dateTopLeft.year() - dateTopLeft.year() % 10, 1, 1);
+            break;
+        }
+    }
+}
+
+void MiniCalendar::updateTitle() const {
+    switch (viewLevel) {
+        case Day: {
+            title->setButtonText(dateTitle.toString("yyyy年M月"));
+            break;
+        }
+        case Month: {
+            title->setButtonText(dateTitle.toString("yyyy年"));
+            break;
+        }
+        case Year: {
+            int y = dateTitle.year();
+            y = y - y % 10;
+            title->setButtonText(QString("%1 - %2").arg(y).arg(y + 9));
+            break;
+        }
+    }
 }
 
 void MiniCalendar::handleArrowButton(bool add) {
     auto cd = wData->cast<MiniCalendarData>();
     switch (viewLevel) {
         case Day: {
-            auto d = cd->titleDate.addMonths(add ? 1 : -1);
-            d.setDate(d.year(), d.month(), 1);
-            cd->setTopLeft(d);
+            dateTopLeft = dateTitle.addMonths(add ? 1 : -1);
+            dateTopLeft.setDate(dateTopLeft.year(), dateTopLeft.month(), 1);
             break;
         }
         case Month: {
-            auto d = cd->titleDate.addYears(add ? 1 : -1);
-            d.setDate(d.year(), 1, 1);
-            cd->setTopLeft(d);
+            dateTopLeft = cd->dateTitle.addYears(add ? 1 : -1);
+            dateTopLeft.setDate(dateTopLeft.year(), 1, 1);
             break;
         }
         case Year: {
-            cd->setTopLeft(cd->titleDate.addYears(add ? 10 : -10));
+            dateTopLeft = cd->dateTitle.addYears(add ? 10 : -10);
+            break;
+        }
+    }
+    syncWidgetToData();
+}
+
+void MiniCalendar::handleButtonTitle() {
+    switch (viewLevel) {
+        case Day:
+            setViewLevel(Month);
+            break;
+        case Month:
+            setViewLevel(Year);
+            break;
+        default:
+            break;
+    }
+    syncWidgetToData();
+}
+
+void MiniCalendar::handlePainterScroll(bool add) {
+    switch (viewLevel) {
+        case Day:
+            dateTopLeft = dateTopLeft.addDays(add ? 7 : -7);
+            break;
+        case Month:
+            dateTopLeft = dateTopLeft.addMonths(add ? 4 : -4);
+            break;
+        case Year:
+            dateTopLeft = dateTopLeft.addYears(add ? 4 : -4);
+            break;
+    }
+    syncWidgetToData();
+}
+
+void MiniCalendar::ensureTopLeft() {
+    switch (viewLevel) {
+        case Day: {
+            dateTopLeft = dateTopLeft.addDays(1 - dateTopLeft.dayOfWeek());
+            break;
+        }
+        case Month: {
+            dateTopLeft = dateTopLeft.addMonths(-(dateTopLeft.month() & 0x3) + 1);
+            break;
+        }
+        default: {
+            dateTopLeft.setDate(dateTopLeft.year() & 0xFFFC, 1, 1);
             break;
         }
     }
@@ -220,30 +253,12 @@ void MiniCalendar::handleArrowButton(bool add) {
 MiniCalendarData::MiniCalendarData(): viewLevel(Day), mark1(0), mark2(0), mark3(0), firstVal() {
 }
 
-void MiniCalendarData::setViewLevel(ViewLevel level) {
-    if (viewLevel == level) {
+void MiniCalendarData::set(ViewLevel level, const QDate& tl) {
+    if (viewLevel == level && topLeft == tl) {
         return;
     }
     viewLevel = level;
-    switch (level) {
-        case Day: {
-            topLeft.setDate(topLeft.year(), topLeft.month(), 1);
-            break;
-        }
-        case Month: {
-            topLeft.setDate(topLeft.year(), 1, 1);
-            break;
-        }
-        default: {
-            topLeft.setDate(topLeft.year() - topLeft.year() % 10, 1, 1);
-            break;
-        }
-    }
-    setTopLeft(topLeft);
-}
-
-void MiniCalendarData::setTopLeft(const QDate &d) {
-    ensureTopLeft(d);
+    topLeft = tl;
     mark3 = -1;
     auto today = QDate::currentDate();
     switch (viewLevel) {
@@ -253,12 +268,12 @@ void MiniCalendarData::setTopLeft(const QDate &d) {
                 d1.setDate(d1.year(), d1.month(), 1);
                 mark1 = static_cast<int>(topLeft.daysTo(d1));
                 mark2 = mark1 + d1.daysInMonth();
-                titleDate = d1;
+                dateTitle = d1;
             } else {
                 auto d1 = QDate(topLeft.year(), topLeft.month(), 1);
                 mark1 = 0;
                 mark2 = d1.daysInMonth() - topLeft.day() + 1;
-                titleDate = d;
+                dateTitle = d1;
             }
             firstVal = topLeft.day();
             if (auto days = topLeft.daysTo(today); days >= 0 && days < 42) {
@@ -272,11 +287,11 @@ void MiniCalendarData::setTopLeft(const QDate &d) {
                 d1.setDate(d1.year(), 1, 1);
                 mark1 = 13 - topLeft.month();
                 mark2 = mark1 + 11;
-                titleDate = d1;
+                dateTitle = d1;
             } else {
                 mark1 = 0;
                 mark2 = 13 - topLeft.month();
-                titleDate = d;
+                dateTitle = topLeft;
             }
             firstVal = topLeft.month();
             if (today >= topLeft && today < topLeft.addMonths(16)) {
@@ -290,15 +305,15 @@ void MiniCalendarData::setTopLeft(const QDate &d) {
         }
         case Year: {
             int i = topLeft.year() % 10;
-            if (i > 4) {
+            if (i >= 4) {
                 auto d1 = topLeft.addYears(10 - i);
                 mark1 = 10 - i;
-                mark2 = mark1 + 9;
-                titleDate = d1;
+                mark2 = mark1 + 10;
+                dateTitle = d1;
             } else {
                 mark1 = 0;
                 mark2 = 10 - i;
-                titleDate = d;
+                dateTitle = topLeft;
             }
             firstVal = topLeft.year();
             auto end = topLeft.addYears(16);
@@ -311,28 +326,12 @@ void MiniCalendarData::setTopLeft(const QDate &d) {
     emit sigDataChanged();
 }
 
-void MiniCalendarData::ensureTopLeft(const QDate &date) {
-    switch (viewLevel) {
-        case Day: {
-            topLeft = date.addDays(1 - date.dayOfWeek());
-            break;
-        }
-        case Month: {
-            topLeft = date.addMonths(-(date.month() & 0x3) + 1);
-            break;
-        }
-        default: {
-            topLeft.setDate(date.year() & 0xFFFC, 1, 1);
-            break;
-        }
-    }
-}
-
 ContentLayer::ContentLayer(): firstVal(), mark1(-1), mark2(-1), mark3(-1), mark4(-1), val(), count(), rx(), ry(),
-                              viewLevel() {
+                              viewLevel(), maxViewLevel() {
 }
 
-void ContentLayer::setVal(ViewLevel vl, int fv, int m1, int m2, int m3) {
+void ContentLayer::setVal(ViewLevel mvl, ViewLevel vl, int fv, int m1, int m2, int m3) {
+    maxViewLevel = mvl;
     viewLevel = vl;
     firstVal = fv;
     mark1 = m1;
@@ -386,7 +385,7 @@ void ContentLayer::drawSlot(QPainter &p, QRect &area, int column, int row) {
 }
 
 void ContentLayer::mousePressed(int column, int row) {
-    if (viewLevel != Day) {
+    if (viewLevel != maxViewLevel) {
         mark4 = row * 4 + column;
         parent->update();
     }

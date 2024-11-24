@@ -20,12 +20,11 @@ public:
 protected:
     int slotWidth, slotHeight;
     int columns, rows;
-    bool running;
     SlotSizePolicy vSlotSizePolicy, hSlotSizePolicy;
 private:
     QVector<SlotsPainterLayer*> layers;
 public:
-    explicit SlotsPainter(QWidget* parent = nullptr);
+    explicit SlotsPainter(QWidget* parent = nullptr, bool initInConstructor = true);
     void appendLayer(SlotsPainterLayer* layer);
     void insertLayer(int i, SlotsPainterLayer* layer);
     void removeLayer(SlotsPainterLayer* layer);

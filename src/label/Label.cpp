@@ -9,7 +9,7 @@
 #include "WidgetUtil.h"
 #include <QMouseEvent>
 
-Label::Label(QWidget *parent): QLabel(parent), StandardWidget() {
+Label::Label(QWidget *parent, bool initInConstructor): QLabel(parent), StandardWidget(initInConstructor) {
     setAlignment(Qt::AlignCenter);
     auto p = palette();
     p.setColor(QPalette::WindowText, Styles::GRAY_TEXT_0->color);

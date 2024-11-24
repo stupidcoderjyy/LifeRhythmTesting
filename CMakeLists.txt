@@ -7,33 +7,41 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_PREFIX_PATH "C:/Program Files/Qt/5.15.2/mingw81_64/lib/cmake")
-set(LR_PROJECT_PATH "C:/Users/stupid_coder_jyy/CLionProjects/LifeRhythm")
+set(LR_PROJECT_PATH "C:/Users/JYY/CLionProjects/LifeRhythm")
 set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testMiniCalendar.cpp)
+set(TEST_ENTRYPOINT testDropDown.cpp)
 
 set(INCLUDES
-        src/button
-        src/arrowButton
+#        src/button
+#        src/arrowButton
 #        src/calendar
+        src/dropDown
+        src/focusContainer
 #        src/input_text_label
 #        src/jbTextButton
         src/label
-        src/miniCalendar
-        src/slotsPainter
+        src/menu
+#        src/miniCalendar
+#        src/slotsPainter
 #        src/slotsWidget
+        src/tiledListWidget
 #        src/xyplot
 )
 
 set(SRC_FILES
-        src/arrowButton/ArrowButton.cpp
-        src/arrowButton/ArrowButton.h
-        src/button/Button.cpp
-        src/button/Button.h
+#        src/arrowButton/ArrowButton.cpp
+#        src/arrowButton/ArrowButton.h
+#        src/button/Button.cpp
+#        src/button/Button.h
 #        src/calendar/Calendar.cpp
 #        src/calendar/Calendar.h
+        src/dropDown/DropDown.h
+        src/dropDown/DropDown.cpp
+        src/focusContainer/FocusContainer.h
+        src/focusContainer/FocusContainer.cpp
 #        src/calendar/CalendarView.cpp
 #        src/calendar/CalendarView.h
 #        src/input_text_label/InputTextLabel.cpp
@@ -42,10 +50,14 @@ set(SRC_FILES
 #        src/jbTextButton/JbTextButton.h
         src/label/Label.h
         src/label/Label.cpp
-        src/miniCalendar/MiniCalendar.cpp
-        src/miniCalendar/MiniCalendar.h
-        src/slotsPainter/SlotsPainter.cpp
-        src/slotsPainter/SlotsPainter.h
+        src/menu/Menu.h
+        src/menu/Menu.cpp
+#        src/miniCalendar/MiniCalendar.cpp
+#        src/miniCalendar/MiniCalendar.h
+#        src/slotsPainter/SlotsPainter.cpp
+#        src/slotsPainter/SlotsPainter.h
+        src/tiledListWidget/TiledListWidget.h
+        src/tiledListWidget/TiledListWidget.cpp
 #        src/slotsWidget/SlotsWidget.cpp
 #        src/slotsWidget/SlotsWidget.h
 )

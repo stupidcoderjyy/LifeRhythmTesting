@@ -23,11 +23,12 @@ private:
     Type activatedType;
     Type showType;
 public:
-    explicit ArrowButton(QWidget* parent = nullptr);
+    explicit ArrowButton(QWidget* parent = nullptr, bool initInConstructor = true);
     void setActivatedType(Type t);
     void setBaseType(Type t);
     void setSelected(bool selected) override;
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
+    void initWidget() override;
 private:
     void updateBase();
     static Type fromString(const QString &str);

@@ -16,6 +16,7 @@ int main(int argc, char* argv[]) {
         auto f = WidgetFactoryStorage::get("test:widget_mini_calendar");
         regClazz(f, Button);
         regClazz(f, ArrowButton);
+        Button::mainInit();
     });
     lr.onPostInit([] {
         auto parent = new QWidget;

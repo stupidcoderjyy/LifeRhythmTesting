@@ -7,14 +7,14 @@
 #include "MemUtil.h"
 #include <QMouseEvent>
 
-SlotsPainter::SlotsPainter(QWidget *parent): Widget(parent), slotWidth(), slotHeight(),
-        columns(), rows(), running(false), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
+SlotsPainter::SlotsPainter(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor), slotWidth(), slotHeight(),
+        columns(), rows(), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
 }
 
 void SlotsPainter::appendLayer(SlotsPainterLayer *layer) {
     layer->parent = this;
     layers << layer;
-    if (running) {
+    if (prepared) {
         update();
     }
 }
@@ -22,7 +22,7 @@ void SlotsPainter::appendLayer(SlotsPainterLayer *layer) {
 void SlotsPainter::insertLayer(int i, SlotsPainterLayer *layer) {
     layer->parent = this;
     layers.insert(i, layer);
-    if (running) {
+    if (prepared) {
         update();
     }
 }
@@ -97,7 +97,6 @@ void SlotsPainter::paintEvent(QPaintEvent *event) {
 
 void SlotsPainter::resizeEvent(QResizeEvent *event) {
     Widget::resizeEvent(event);
-    running = true;
     updateBase();
 }
 
@@ -124,7 +123,7 @@ void SlotsPainter::wheelEvent(QWheelEvent *event) {
 }
 
 void SlotsPainter::updateBase() {
-    if (!running) {
+    if (!prepared) {
         return;
     }
     if (vSlotSizePolicy == Auto) {

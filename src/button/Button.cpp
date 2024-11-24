@@ -11,15 +11,17 @@
 #include "QMouseEvent"
 #include "FocusManager.h"
 
-auto qssNormal = bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-auto qssHovered = bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-auto qssPressed = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-auto qssSelected = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-auto qssSelectedDisabled = bg(Styles::CLEAR->rgbHex) + bd("2px", "solid", Styles::GRAY_1->rgbHex) + brad("2px");
+QString Button::qssNormal{};
+QString Button::qssHovered{};
+QString Button::qssPressed{};
+QString Button::qssSelected{};
+QString Button::qssSelectedDisabled{};
 
-Button::Button(QWidget *parent): Label(parent), running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
-                                 enabled(true), type(Click) {
+Button::Button(QWidget *parent, bool initInConstructor): Label(parent, initInConstructor),
+        running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
+        enabled(true), type(Click) {
     setAlignment(Qt::AlignCenter);
+    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
 
 void Button::setButtonText(const QString &text) {
@@ -132,6 +134,14 @@ void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
             static_cast<Button*>(w)->setActivateOnPress(activeOnPress);
         };
     }
+}
+
+void Button::mainInit() {
+    qssNormal = bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    qssHovered = bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    qssPressed = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    qssSelected = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    qssSelectedDisabled = bg(Styles::CLEAR->rgbHex) + bd("2px", "solid", Styles::GRAY_1->rgbHex) + brad("2px");
 }
 
 void Button::enterEvent(QEvent *event) {

@@ -12,7 +12,7 @@
 
 class Label : public QLabel, public StandardWidget {
 public:
-    explicit Label(QWidget* parent);
+    explicit Label(QWidget* parent, bool initInConstructor = true);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     void onStateRespondersParsing(Handlers &responders, NBT *stateTag) override;
 protected:

@@ -11,9 +11,9 @@
 #include <RcManagers.h>
 #include <WidgetUtil.h>
 
-ArrowButton::ArrowButton(QWidget *parent): Button(parent), baseType(Down), activatedType(Down), showType(None) {
+ArrowButton::ArrowButton(QWidget *parent, bool initInConstructor): Button(parent, initInConstructor),
+        baseType(Down), activatedType(Down), showType(None) {
     setButtonMode(SelectClick);
-    updateBase();
 }
 
 void ArrowButton::setActivatedType(Type t) {
@@ -53,6 +53,10 @@ void ArrowButton::onPostParsing(Handlers &handlers, NBT *widgetTag) {
         ab->setActivatedType(a);
         ab->setBaseType(b);
     };
+}
+
+void ArrowButton::initWidget() {
+    updateBase();
 }
 
 void ArrowButton::updateBase() {

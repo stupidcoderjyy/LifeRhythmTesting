@@ -8,7 +8,6 @@
 #include <qboxlayout.h>
 
 #include "Widget.h"
-#include "TextLabel.h"
 #include "SlotsPainter.h"
 #include <QDateTime>
 #include "ArrowButton.h"
@@ -28,24 +27,31 @@ protected:
     ArrowButton* next;
     Button* title;
     ContentLayer* layerContent;
-    TitleLayer* layerTitle;
     SlotsPainter* painterWeekdayTitle;
     SlotsPainter* painters[3];
-    QVBoxLayout* bottom;
+private:
+    TitleLayer *layerTitle;
+    QVBoxLayout *bottom;
     ViewLevel viewLevel;
     ViewLevel maxViewLevel;
-    bool running;
+    QDate dateTopLeft;
+    QDate dateTitle;
 public:
-    explicit MiniCalendar(QWidget* parent = nullptr);
-    void loadDate(const QDate& date) const;
+    explicit MiniCalendar(QWidget* parent = nullptr, bool initInConstructor = true);
+    void loadDate(const QDate& date);
     void setMaxViewLevel(ViewLevel level);
 protected:
     void syncDataToWidget() override;
+    void syncWidgetToData() override;
     void connectModelView() override;
+    void initWidget() override;
 private:
-    void init();
-    void onViewLevelChanged(ViewLevel level);
+    void setViewLevel(ViewLevel levelNew);
+    void updateTitle() const;
     void handleArrowButton(bool add);
+    void handleButtonTitle();
+    void handlePainterScroll(bool add);
+    void ensureTopLeft();
 };
 
 class MiniCalendarData : public WidgetData {
@@ -53,14 +59,12 @@ class MiniCalendarData : public WidgetData {
 private:
     ViewLevel viewLevel;
     QDate topLeft;
-    QDate titleDate;
+    QDate dateTitle;
     int mark1, mark2, mark3;
     int firstVal;
 private:
     MiniCalendarData();
-    void setViewLevel(ViewLevel level);
-    void setTopLeft(const QDate& d);
-    void ensureTopLeft(const QDate& date);
+    void set(ViewLevel level, const QDate& topLeft);
 };
 
 class ContentLayer : public SlotsPainterLayer {
@@ -70,9 +74,10 @@ private:
     int val, count;
     int rx, ry;
     ViewLevel viewLevel;
+    ViewLevel maxViewLevel;
 public:
     ContentLayer();
-    void setVal(ViewLevel viewLevel, int firstVal, int mark1, int mark2, int mark3);
+    void setVal(ViewLevel maxViewLevel, ViewLevel viewLevel, int firstVal, int mark1, int mark2, int mark3);
 protected:
     void beforeDrawing(QPainter &p) override;
     void drawSlot(QPainter &p, QRect &area, int column, int row) override;
