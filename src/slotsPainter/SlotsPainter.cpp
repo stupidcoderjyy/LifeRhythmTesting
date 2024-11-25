@@ -7,22 +7,17 @@
 #include "MemUtil.h"
 #include <QMouseEvent>
 
+USING_NAMESPACE(lr)
+
 SlotsPainter::SlotsPainter(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor), slotWidth(), slotHeight(),
         columns(), rows(), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
 }
 
-void SlotsPainter::appendLayer(SlotsPainterLayer *layer) {
+void SlotsPainter::addLayer(SlotsPainterLayer *layer) {
     layer->parent = this;
     layers << layer;
     if (prepared) {
-        update();
-    }
-}
-
-void SlotsPainter::insertLayer(int i, SlotsPainterLayer *layer) {
-    layer->parent = this;
-    layers.insert(i, layer);
-    if (prepared) {
+        updateBase();
         update();
     }
 }
@@ -34,6 +29,9 @@ void SlotsPainter::removeLayer(SlotsPainterLayer* layer) {
     }
     auto* l = layers.takeAt(i);
     l->parent = nullptr;
+    if (prepared) {
+        update();
+    }
 }
 
 void SlotsPainter::onPostParsing(Handlers &handlers, NBT *widgetTag) {
@@ -122,8 +120,26 @@ void SlotsPainter::wheelEvent(QWheelEvent *event) {
     emit sigScroll(event->angleDelta().y());
 }
 
+void SlotsPainter::mouseMoveEvent(QMouseEvent *event) {
+    auto p = event->pos();
+    int r = p.y() / slotHeight, c = p.x() / slotWidth;
+    if (prevColumn != c || prevRow != r) {
+        prevColumn = c;
+        prevRow = r;
+        for (auto l: layers) {
+            l->mouseEntered(c, r);
+        }
+        emit sigMouseEntered(c, r);
+    }
+}
+
+void SlotsPainter::leaveEvent(QEvent *event) {
+    for (auto l: layers) {
+        l->mouseLeaved();
+    }
+}
+
 void SlotsPainter::initWidget() {
-    prepared = true;
     updateBase();
 }
 
@@ -135,10 +151,13 @@ void SlotsPainter::updateBase() {
         if (hSlotSizePolicy == Auto) {
             slotWidth = width() / columns;
         }
+        std::sort(layers.begin(), layers.end(), [](auto *l, auto *r) {
+            return l->zPos < r->zPos;
+        });
     }
 }
 
-SlotsPainterLayer::SlotsPainterLayer(): parent() {
+SlotsPainterLayer::SlotsPainterLayer(int z): zPos(z), parent() {
 }
 
 SlotsPainterLayer::~SlotsPainterLayer() = default;
@@ -160,4 +179,19 @@ void SlotsPainterLayer::mousePressed(int column, int row) {
 }
 
 void SlotsPainterLayer::mouseReleased(int column, int row) {
+}
+
+void SlotsPainterLayer::mouseEntered(int column, int row) {
+}
+
+void SlotsPainterLayer::mouseLeaved() {
+}
+
+USING_NAMESPACE(sp_layers)
+
+BackgroundLayer::BackgroundLayer(QColor bgColor): SlotsPainterLayer(-1), bgColor(std::move(bgColor)) {
+}
+
+void BackgroundLayer::beforeDrawing(QPainter &p) {
+    p.fillRect(parent->rect(), bgColor);
 }

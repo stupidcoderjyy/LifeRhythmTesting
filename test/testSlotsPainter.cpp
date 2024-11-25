@@ -7,10 +7,11 @@ USING_NAMESPACE(lr)
 
 #include <QHBoxLayout>
 #include "ListWidget.h"
-#include "TiledListWidget.h"
 #include <QDebug>
 
 class TestLayer : public SlotsPainterLayer {
+public:
+    TestLayer(): SlotsPainterLayer(1) {}
 protected:
     void beforeDrawing(QPainter &p) override {
         p.setFont(Styles::FONT_LARGE);
@@ -18,7 +19,6 @@ protected:
     }
 
     void drawSlot(QPainter &p, QRect &area, int row, int column) override {
-        p.fillRect(area, Styles::BLACK->color);
         p.drawText(area, QString::number(row) + "," + QString::number(column), QTextOption(Qt::AlignCenter));
     }
 };
@@ -37,7 +37,8 @@ int main(int argc, char* argv[]) {
         sw->setSlotCount(5, 3);
         sw->setMinimumSize(200, 200);
         sw->setSizePolicy(QSizePolicy:: Minimum, QSizePolicy::Minimum);
-        sw->appendLayer(new TestLayer);
+        sw->addLayer(new TestLayer);
+        sw->addLayer(new sp_layers::BackgroundLayer);
         layout->addWidget(sw);
         parent->show();
     });

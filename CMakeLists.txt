@@ -12,7 +12,7 @@ set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testMiniCalendar.cpp)
+set(TEST_ENTRYPOINT testCalendar.cpp)
 
 set(INCLUDES
         src/button

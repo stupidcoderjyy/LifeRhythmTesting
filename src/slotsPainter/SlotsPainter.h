@@ -2,11 +2,15 @@
 // Created by stupid_coder_jyy on 2024/4/5.
 //
 
-#ifndef LIFERHYTHM_SLOTSDRAWER_H
-#define LIFERHYTHM_SLOTSDRAWER_H
+#ifndef SLOTSDRAWER_H
+#define SLOTSDRAWER_H
+
+#include <Namespaces.h>
 
 #include "Widget.h"
 #include "Error.h"
+
+BEGIN_NAMESPACE(lr)
 
 class SlotsPainterLayer;
 
@@ -23,10 +27,11 @@ protected:
     SlotSizePolicy vSlotSizePolicy, hSlotSizePolicy;
 private:
     QVector<SlotsPainterLayer*> layers;
+    int prevColumn = -1;
+    int prevRow = -1;
 public:
     explicit SlotsPainter(QWidget* parent = nullptr, bool initInConstructor = true);
-    void appendLayer(SlotsPainterLayer* layer);
-    void insertLayer(int i, SlotsPainterLayer* layer);
+    void addLayer(SlotsPainterLayer* layer);
     void removeLayer(SlotsPainterLayer* layer);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     inline void setSlotSize(int width, int height);
@@ -37,12 +42,15 @@ signals:
     void sigPressSlot(int column, int row);
     void sigReleaseSlot(int column, int row);
     void sigScroll(int dy);
+    void sigMouseEntered(int column, int row);
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void leaveEvent(QEvent *event) override;
     void initWidget() override;
 private:
     void updateBase();
@@ -72,9 +80,10 @@ inline void SlotsPainter::setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizeP
 class SlotsPainterLayer {
     friend class SlotsPainter;
 protected:
+    int zPos;
     SlotsPainter* parent;
 public:
-    SlotsPainterLayer();
+    explicit SlotsPainterLayer(int z = 0);
     virtual ~SlotsPainterLayer();
 protected:
     virtual bool shouldDraw();
@@ -83,6 +92,22 @@ protected:
     virtual void afterDrawing(QPainter& p);
     virtual void mousePressed(int column, int row);
     virtual void mouseReleased(int column, int row);
+    virtual void mouseEntered(int column, int row);
+    virtual void mouseLeaved();
 };
 
-#endif //LIFERHYTHM_SLOTSDRAWER_H
+BEGIN_NAMESPACE(sp_layers)
+
+class BackgroundLayer : public SlotsPainterLayer {
+private:
+    QColor bgColor;
+public:
+    explicit BackgroundLayer(QColor bgColor = Styles::GRAY_0->color);
+    void beforeDrawing(QPainter &p) override;
+};
+
+END_NAMESPACE
+
+END_NAMESPACE
+
+#endif //SLOTSDRAWER_H

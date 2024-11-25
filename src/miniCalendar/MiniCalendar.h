@@ -37,6 +37,7 @@ protected:
     ArrowButton* next;
     Button* title;
     ContentLayer* layerContent;
+    SlotsPainterLayer* background;
     SlotsPainter* painterWeekdayTitle;
     SlotsPainter* painters[3];
 private:
@@ -91,4 +92,4 @@ END_NAMESPACE
 
 END_NAMESPACE
 
-#endif //LIFERHYTHM_CALENDAR_H
+#endif //MINICALENDAR_H

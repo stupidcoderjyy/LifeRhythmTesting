@@ -58,12 +58,15 @@ void MiniCalendar::initWidget() {
     painterWeekdayTitle = new SlotsPainter(this);
     painterWeekdayTitle->setFixedSize(WIDTH, SLOT_SIZE_1);
     painterWeekdayTitle->setSlotCount(7, 1);
-    painterWeekdayTitle->appendLayer(layerTitle);
+    painterWeekdayTitle->addLayer(layerTitle);
+
+    background = new sp_layers::BackgroundLayer(Styles::BLACK->color);
 
     auto* painterDay = new SlotsPainter(this);
     painterDay->setFixedSize(WIDTH, SLOT_SIZE_1 * 6);
     painterDay->setSlotCount(7, 6);
-    painterDay->appendLayer(layerContent);
+    painterDay->addLayer(background);
+    painterDay->addLayer(layerContent);
     connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
     });
@@ -71,6 +74,7 @@ void MiniCalendar::initWidget() {
     auto *painterMonth = new SlotsPainter(this);
     painterMonth->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
     painterMonth->setSlotCount(4, 4);
+    painterMonth->addLayer(background);
     painterMonth->close();
     connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
         if (maxViewLevel == Day) {
@@ -87,6 +91,7 @@ void MiniCalendar::initWidget() {
     painterYear->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
     painterYear->setSlotCount(4, 4);
     painterYear->close();
+    painterYear->addLayer(background);
     connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
         if (maxViewLevel > Year) {
             dateTopLeft = dateTopLeft.addYears((r << 2) + c);
@@ -206,7 +211,7 @@ void MiniCalendar::setViewLevel(ViewLevel levelNew) {
     } else {
         bottom->replaceWidget(painters[viewLevel], painters[levelNew]);
     }
-    painters[levelNew]->appendLayer(layerContent);
+    painters[levelNew]->addLayer(layerContent);
     painters[levelNew]->show();
     viewLevel = levelNew;
     switch (levelNew) {
@@ -312,7 +317,7 @@ void MiniCalendar::ensureTopLeft() {
 
 USING_NAMESPACE(mini_calendar)
 
-ContentLayer::ContentLayer(): firstVal(), mark1(-1), mark2(-1), mark3(-1), mark4(-1), val(), count(), rx(), ry(),
+ContentLayer::ContentLayer(): SlotsPainterLayer(INT32_MAX), firstVal(), mark1(-1), mark2(-1), mark3(-1), mark4(-1), val(), count(), rx(), ry(),
                               viewLevel(), maxViewLevel() {
 }
 
@@ -339,7 +344,6 @@ void ContentLayer::beforeDrawing(QPainter &p) {
     p.setPen(Styles::GRAY_4->color);
     val = firstVal;
     count = 0;
-    p.fillRect(parent->rect(), Styles::BLACK->color);
 }
 
 void ContentLayer::drawSlot(QPainter &p, QRect &area, int column, int row) {

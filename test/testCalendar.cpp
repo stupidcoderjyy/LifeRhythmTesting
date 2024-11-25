@@ -1,21 +1,11 @@
-#include <QDebug>
 #include <RcManagers.h>
 #include "LifeRhythm.h"
 #include "SlotsPainter.h"
-#include <QHBoxLayout>
 #include "ListWidget.h"
-#include "WidgetFactory.h"
 #include "Calendar.h"
-#include "InputTextLabel.h"
-#include "CalendarView.h"
 
 USING_NAMESPACE(lr)
-
-class TestFeedBack : public Message {
-public:
-    explicit TestFeedBack(Identifier loc): Message(std::move(loc)) {
-    }
-};
+USING_NAMESPACE(lr::calender)
 
 int main(int argc, char* argv[]) {
     LifeRhythm lr(argc, argv);
@@ -23,30 +13,21 @@ int main(int argc, char* argv[]) {
     cfg.setMode(Config::Test);
     lr.setConfig(cfg);
     lr.onMainInit([] {
-        auto f = WidgetFactoryStorage::get("lr:widget_calendar");
-        regClazz(f, SlotsPainter);
-        regClazz(f, InputTextLabel);
-        regClazz(f, Calendar);
+        auto f = WidgetFactoryStorage::get("test:widget_mini_calendar");
+        regClazz(f, Button);
+        regClazz(f, ArrowButton);
+        Button::mainInit();
     });
     lr.onPostInit([] {
         auto parent = new QWidget;
         auto layout = new QVBoxLayout(parent);
         parent->setLayout(layout);
 
-        CalendarBuilder builder(parent);
-        auto v = new CalendarView;
-        builder.setView(v);
+        auto* c = new calendar::DropDownMiniCalendar(parent);
 
-        layout->addWidget(builder.get());
+        layout->addWidget(c);
+
         parent->show();
-
-        auto d = new CalendarData("test");
-        LifeRhythm::get()->getMessageHandler().registerListener(d->getSenderLoc(), [d](auto, auto) {
-            LifeRhythm::get()->getMessageHandler().sendMessage(new TestFeedBack(d->getReceiverLoc()));
-            return MessageListener::SUCCESS;
-        });
-        v->setData(d);
-        v->loadCalendar(QDate::currentDate());
     });
     return lr.launch();
 }

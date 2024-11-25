@@ -18,10 +18,6 @@ enum ViewType {
     Month, D1, D2, D3, D4, D5, D6, D7
 };
 
-class DropDownMiniCalendar : public MiniCalendar {
-
-};
-
 END_NAMESPACE
 
 class CalendarData : public WidgetData {
@@ -30,6 +26,32 @@ public:
     ViewType viewType;
     QDate startDate;
 };
+
+BEGIN_NAMESPACE(calendar)
+
+class DropDownMiniCalendar : public MiniCalendar {
+public:
+    explicit DropDownMiniCalendar(QWidget* parent = nullptr, bool iic = true);
+protected:
+    void initWidget() override;
+};
+
+class LayerDay : public SlotsPainterLayer {
+    using ViewType = calender::ViewType;
+private:
+    ViewType viewType;
+    int length;
+    int count;
+    int begin, end;
+public:
+    LayerDay();
+protected:
+    void mouseEntered(int column, int row) override;
+    void beforeDrawing(QPainter &p) override;
+    void drawSlot(QPainter &p, QRect &area, int column, int row) override;
+};
+
+END_NAMESPACE
 
 END_NAMESPACE
 
