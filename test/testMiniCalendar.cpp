@@ -6,6 +6,7 @@
 #include "LifeRhythm.h"
 
 USING_NAMESPACE(lr)
+using ViewLevel = mini_calendar::ViewLevel;
 
 int main(int argc, char* argv[]) {
     LifeRhythm lr(argc, argv);
@@ -25,10 +26,10 @@ int main(int argc, char* argv[]) {
         auto mc1 = new MiniCalendar(parent);
 
         auto mc2 = new MiniCalendar(parent);
-        mc2->setMaxViewLevel(Year);
+        mc2->setMaxViewLevel(ViewLevel::Year);
 
         auto mc3 = new MiniCalendar(parent);
-        mc3->setMaxViewLevel(Month);
+        mc3->setMaxViewLevel(ViewLevel::Month);
 
         layout->addWidget(mc1);
         layout->addWidget(mc2);

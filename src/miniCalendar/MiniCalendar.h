@@ -5,12 +5,16 @@
 #ifndef MINICALENDAR_H
 #define MINICALENDAR_H
 
+#include <Namespaces.h>
 #include <qboxlayout.h>
-
 #include "Widget.h"
 #include "SlotsPainter.h"
 #include <QDateTime>
 #include "ArrowButton.h"
+
+BEGIN_NAMESPACE(lr)
+
+BEGIN_NAMESPACE(mini_calendar)
 
 class ContentLayer;
 class TitleLayer;
@@ -21,7 +25,13 @@ enum ViewLevel {
     Day
 };
 
+END_NAMESPACE
+
 class MiniCalendar : public Widget {
+public:
+    using ContentLayer = mini_calendar::ContentLayer;
+    using TitleLayer = mini_calendar::TitleLayer;
+    using ViewLevel = mini_calendar::ViewLevel;
 protected:
     ArrowButton* prev;
     ArrowButton* next;
@@ -41,10 +51,8 @@ public:
     void loadDate(const QDate& date);
     void setMaxViewLevel(ViewLevel level);
 protected:
-    void syncDataToWidget() override;
-    void syncWidgetToData() override;
-    void connectModelView() override;
     void initWidget() override;
+    void onDataChanged();
 private:
     void setViewLevel(ViewLevel levelNew);
     void updateTitle() const;
@@ -54,18 +62,7 @@ private:
     void ensureTopLeft();
 };
 
-class MiniCalendarData : public WidgetData {
-    friend class MiniCalendar;
-private:
-    ViewLevel viewLevel;
-    QDate topLeft;
-    QDate dateTitle;
-    int mark1, mark2, mark3;
-    int firstVal;
-private:
-    MiniCalendarData();
-    void set(ViewLevel level, const QDate& topLeft);
-};
+BEGIN_NAMESPACE(mini_calendar)
 
 class ContentLayer : public SlotsPainterLayer {
 private:
@@ -89,5 +86,9 @@ protected:
     void beforeDrawing(QPainter &p) override;
     void drawSlot(QPainter &p, QRect &area, int column, int row) override;
 };
+
+END_NAMESPACE
+
+END_NAMESPACE
 
 #endif //LIFERHYTHM_CALENDAR_H

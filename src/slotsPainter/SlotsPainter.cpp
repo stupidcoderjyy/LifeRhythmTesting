@@ -122,15 +122,19 @@ void SlotsPainter::wheelEvent(QWheelEvent *event) {
     emit sigScroll(event->angleDelta().y());
 }
 
+void SlotsPainter::initWidget() {
+    prepared = true;
+    updateBase();
+}
+
 void SlotsPainter::updateBase() {
-    if (!prepared) {
-        return;
-    }
-    if (vSlotSizePolicy == Auto) {
-        slotHeight = height() / rows;
-    }
-    if (hSlotSizePolicy == Auto) {
-        slotWidth = width() / columns;
+    if (prepared) {
+        if (vSlotSizePolicy == Auto) {
+            slotHeight = height() / rows;
+        }
+        if (hSlotSizePolicy == Auto) {
+            slotWidth = width() / columns;
+        }
     }
 }
 

@@ -2,37 +2,35 @@
 // Created by stupid_coder_jyy on 24-11-8.
 //
 
-#ifndef LIFERHYTHMTESTING_CALENDAR_H
-#define LIFERHYTHMTESTING_CALENDAR_H
+#ifndef CALENDAR_H
+#define CALENDAR_H
+#include <Namespaces.h>
+#include <WidgetData.h>
+#include <QDate>
 
-#include "Widget.h"
-#include "SlotsPainter.h"
+#include "MiniCalendar.h"
 
-class Calendar : public Widget {
-private:
-    SlotsPainter* spWeekDayTitle;
+BEGIN_NAMESPACE(lr)
+
+BEGIN_NAMESPACE(calender)
+
+enum ViewType {
+    Month, D1, D2, D3, D4, D5, D6, D7
+};
+
+class DropDownMiniCalendar : public MiniCalendar {
+
+};
+
+END_NAMESPACE
+
+class CalendarData : public WidgetData {
+    using ViewType = calender::ViewType;
 public:
-    explicit Calendar(QWidget* parent = nullptr);
-    void onFinishedParsing(Handlers &handlers, NBT *widgetTag) override;
+    ViewType viewType;
+    QDate startDate;
 };
 
-class WeekDaysTitleLayer : public SlotsPainterLayer {
-protected:
-    void beforeDrawing(QPainter &p) override;
-    void drawSlot(QPainter &p, QRect &area, int row, int column) override;
-};
+END_NAMESPACE
 
-class CalendarView;
-
-class CalendarBuilder {
-private:
-    Calendar* c;
-public:
-    explicit CalendarBuilder(QWidget* parent = nullptr);
-    CalendarBuilder& setView(CalendarView* view);
-    Calendar* get();
-    ~CalendarBuilder();
-};
-
-
-#endif //LIFERHYTHMTESTING_CALENDAR_H
+#endif //CALENDAR_H
