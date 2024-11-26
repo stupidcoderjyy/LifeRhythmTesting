@@ -137,9 +137,11 @@ void SlotsPainter::leaveEvent(QEvent *event) {
     for (auto l: layers) {
         l->mouseLeaved();
     }
+    prevColumn = prevRow = -1;
 }
 
 void SlotsPainter::initWidget() {
+    prepared = true;
     updateBase();
 }
 

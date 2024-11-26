@@ -8,6 +8,7 @@
 #include <QWheelEvent>
 #include <QLayout>
 #include <QPainterPath>
+#include <QTimer>
 
 USING_NAMESPACE(lr)
 
@@ -23,104 +24,15 @@ MiniCalendar::MiniCalendar(QWidget *parent, bool initInConstructor): Widget(pare
 
 void MiniCalendar::loadDate(const QDate &date) {
     dateTopLeft = QDate(date.year(), date.month(), 1);
-    onDataChanged();
+    syncWidget();
 }
 
 void MiniCalendar::setMaxViewLevel(ViewLevel level) {
     maxViewLevel = level;
-    onDataChanged();
+    syncWidget();
 }
 
-#define TIMES 9
-#define SLOT_SIZE_1 4 * TIMES
-#define SLOT_SIZE_2 7 * TIMES
-#define WIDTH 7 * SLOT_SIZE_1
-#define HEIGHT 8 * SLOT_SIZE_1
-
-void MiniCalendar::initWidget() {
-    setFixedSize(WIDTH, HEIGHT);
-    WidgetFactoryStorage::get("test:widget_mini_calendar")->apply(nullptr, this);
-    prev = getPointer<ArrowButton>("prev");
-    connect(prev, &ArrowButton::sigSelected, this, [this] {
-        handleArrowButton(false);
-    });
-    next = getPointer<ArrowButton>("next");
-    connect(next, &ArrowButton::sigSelected, this, [this] {
-        handleArrowButton(true);
-    });
-    title = getPointer<Button>("title");
-    connect(title, &Button::sigActivated, this, [this] {
-        handleButtonTitle();
-    });
-    getPointer<Widget>("top")->setFixedHeight(SLOT_SIZE_1);
-    layerTitle = new TitleLayer;
-    layerContent = new ContentLayer;
-    painterWeekdayTitle = new SlotsPainter(this);
-    painterWeekdayTitle->setFixedSize(WIDTH, SLOT_SIZE_1);
-    painterWeekdayTitle->setSlotCount(7, 1);
-    painterWeekdayTitle->addLayer(layerTitle);
-
-    background = new sp_layers::BackgroundLayer(Styles::BLACK->color);
-
-    auto* painterDay = new SlotsPainter(this);
-    painterDay->setFixedSize(WIDTH, SLOT_SIZE_1 * 6);
-    painterDay->setSlotCount(7, 6);
-    painterDay->addLayer(background);
-    painterDay->addLayer(layerContent);
-    connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
-        handlePainterScroll(dy < 0);
-    });
-
-    auto *painterMonth = new SlotsPainter(this);
-    painterMonth->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
-    painterMonth->setSlotCount(4, 4);
-    painterMonth->addLayer(background);
-    painterMonth->close();
-    connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
-        if (maxViewLevel == Day) {
-            dateTopLeft = dateTopLeft.addMonths((r << 2) + c);
-            setViewLevel(Day);
-            onDataChanged();
-        }
-    });
-    connect(painterMonth, &SlotsPainter::sigScroll, this, [this](int dy){
-        handlePainterScroll(dy < 0);
-    });
-
-    auto *painterYear = new SlotsPainter(this);
-    painterYear->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
-    painterYear->setSlotCount(4, 4);
-    painterYear->close();
-    painterYear->addLayer(background);
-    connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
-        if (maxViewLevel > Year) {
-            dateTopLeft = dateTopLeft.addYears((r << 2) + c);
-            setViewLevel(Month);
-            onDataChanged();
-        }
-    });
-    connect(painterYear, &SlotsPainter::sigScroll, this, [this](int dy){
-        handlePainterScroll(dy < 0);
-    });
-
-    painters[Day] = painterDay;
-    painters[Month] = painterMonth;
-    painters[Year] = painterYear;
-
-    bottom = static_cast<QVBoxLayout*>(getPointer<Widget>("bottom")->layout());
-    bottom->addWidget(painterWeekdayTitle);
-    bottom->addWidget(painterDay);
-    ViewLevel l = qMin(viewLevel, maxViewLevel);
-    if (viewLevel != l) {
-        setViewLevel(l);
-    }
-    prepared = true;
-    loadDate(QDate::currentDate());
-    show();
-    onDataChanged();
-}
-
-void MiniCalendar::onDataChanged() {
+void MiniCalendar::syncWidget() {
     if (!prepared) {
         return;
     }
@@ -193,6 +105,97 @@ void MiniCalendar::onDataChanged() {
     }
     layerContent->setVal(maxViewLevel, viewLevel, firstVal, mark1, mark2, mark3);
     updateTitle();
+    emit sigMiniCalendarChanged();
+}
+
+#define TIMES 9
+#define SLOT_SIZE_1 4 * TIMES
+#define SLOT_SIZE_2 7 * TIMES
+#define WIDTH 7 * SLOT_SIZE_1
+#define HEIGHT 8 * SLOT_SIZE_1
+
+void MiniCalendar::initWidget() {
+    setFixedSize(WIDTH, HEIGHT);
+    WidgetFactoryStorage::get("test:widget_mini_calendar")->apply(nullptr, this);
+    prev = getPointer<ArrowButton>("prev");
+    connect(prev, &ArrowButton::sigSelected, this, [this] {
+        handleArrowButton(false);
+    });
+    next = getPointer<ArrowButton>("next");
+    connect(next, &ArrowButton::sigSelected, this, [this] {
+        handleArrowButton(true);
+    });
+    title = getPointer<Button>("title");
+    connect(title, &Button::sigActivated, this, [this] {
+        handleButtonTitle();
+    });
+    getPointer<Widget>("top")->setFixedHeight(SLOT_SIZE_1);
+    layerTitle = new TitleLayer;
+    layerContent = new ContentLayer;
+    painterWeekdayTitle = new SlotsPainter(this);
+    painterWeekdayTitle->setFixedSize(WIDTH, SLOT_SIZE_1);
+    painterWeekdayTitle->setSlotCount(7, 1);
+    painterWeekdayTitle->addLayer(layerTitle);
+
+    background = new sp_layers::BackgroundLayer(Styles::BLACK->color);
+
+    auto* painterDay = new SlotsPainter(this);
+    painterDay->setFixedSize(WIDTH, SLOT_SIZE_1 * 6);
+    painterDay->setSlotCount(7, 6);
+    painterDay->addLayer(background);
+    painterDay->addLayer(layerContent);
+    connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
+        handlePainterScroll(dy < 0);
+    });
+
+    auto *painterMonth = new SlotsPainter(this);
+    painterMonth->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
+    painterMonth->setSlotCount(4, 4);
+    painterMonth->addLayer(background);
+    painterMonth->close();
+    connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
+        if (maxViewLevel == Day) {
+            dateTopLeft = dateTopLeft.addMonths((r << 2) + c);
+            setViewLevel(Day);
+            syncWidget();
+        }
+    });
+    connect(painterMonth, &SlotsPainter::sigScroll, this, [this](int dy){
+        handlePainterScroll(dy < 0);
+    });
+
+    auto *painterYear = new SlotsPainter(this);
+    painterYear->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
+    painterYear->setSlotCount(4, 4);
+    painterYear->close();
+    painterYear->addLayer(background);
+    connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
+        if (maxViewLevel > Year) {
+            dateTopLeft = dateTopLeft.addYears((r << 2) + c);
+            setViewLevel(Month);
+            syncWidget();
+        }
+    });
+    connect(painterYear, &SlotsPainter::sigScroll, this, [this](int dy){
+        handlePainterScroll(dy < 0);
+    });
+
+    painters[Day] = painterDay;
+    painters[Month] = painterMonth;
+    painters[Year] = painterYear;
+
+    bottom = static_cast<QVBoxLayout*>(getPointer<Widget>("bottom")->layout());
+    bottom->addWidget(painterWeekdayTitle);
+    bottom->addWidget(painterDay);
+    ViewLevel l = qMin(viewLevel, maxViewLevel);
+    if (viewLevel != l) {
+        setViewLevel(l);
+    }
+    prepared = true;
+    QTimer::singleShot(0, [this] {
+        loadDate(QDate::currentDate()); //初始化阶段不允许同步数据
+    });
+    show();
 }
 
 void MiniCalendar::setViewLevel(ViewLevel levelNew) {
@@ -266,7 +269,7 @@ void MiniCalendar::handleArrowButton(bool add) {
             break;
         }
     }
-    onDataChanged();
+    syncWidget();
 }
 
 void MiniCalendar::handleButtonTitle() {
@@ -280,7 +283,7 @@ void MiniCalendar::handleButtonTitle() {
         default:
             break;
     }
-    onDataChanged();
+    syncWidget();
 }
 
 void MiniCalendar::handlePainterScroll(bool add) {
@@ -295,7 +298,7 @@ void MiniCalendar::handlePainterScroll(bool add) {
             dateTopLeft = dateTopLeft.addYears(add ? 4 : -4);
             break;
     }
-    onDataChanged();
+    syncWidget();
 }
 
 void MiniCalendar::ensureTopLeft() {

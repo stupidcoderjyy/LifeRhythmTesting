@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
         auto f = WidgetFactoryStorage::get("test:test_drop_down");
         regClazz(f, DropDown);
         regClazz(f, Label);
-        f = WidgetFactoryStorage::get("test:test_drop_down_menu");
         regClazz(f, List);
     });
     lr.onPostInit([] {
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
 
         auto dropDown = WidgetFactoryStorage::get("test:test_drop_down")->applyAndCast<DropDown>();
 
-        auto l = dropDown->getMenu()->getPointer<List>("l");
+        auto l = dropDown->getPointer<List>("l");
         l->setFixedSize(200, 200);
         l->setSlotSize(50, 50);
         l->setColumnCount(7);

@@ -172,7 +172,7 @@ ScrollBar *TiledListWidget::createVerticalScrollBar() {
 }
 
 void TiledListWidget::updateBase() {
-    if (!prepared || !wData) {
+    if (!wData) {
         return;
     }
     int oldColumn = columnCount;

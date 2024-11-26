@@ -6,8 +6,6 @@
 #define CALENDAR_H
 #include <Namespaces.h>
 #include <WidgetData.h>
-#include <QDate>
-
 #include "MiniCalendar.h"
 
 BEGIN_NAMESPACE(lr)
@@ -24,29 +22,43 @@ class CalendarData : public WidgetData {
     using ViewType = calender::ViewType;
 public:
     ViewType viewType;
-    QDate startDate;
+    QDate dateStart;
+public:
+    CalendarData();
 };
 
 BEGIN_NAMESPACE(calendar)
 
+class LayerDay;
+
 class DropDownMiniCalendar : public MiniCalendar {
+    using ViewType = calender::ViewType;
+private:
+    LayerDay* layerDay;
+    QDate dateStart;
+    ViewType viewType;
 public:
     explicit DropDownMiniCalendar(QWidget* parent = nullptr, bool iic = true);
+    void syncDataToWidget() override;
+    void syncWidgetToData() override;
 protected:
     void initWidget() override;
+    void syncWidget() override;
 };
 
 class LayerDay : public SlotsPainterLayer {
     using ViewType = calender::ViewType;
 private:
-    ViewType viewType;
-    int length;
+    int len;
     int count;
-    int begin, end;
+    int hb, he;
+    int sb, se;
 public:
     LayerDay();
-protected:
+    void set(int len, int sb);
+private:
     void mouseEntered(int column, int row) override;
+    void mouseLeaved() override;
     void beforeDrawing(QPainter &p) override;
     void drawSlot(QPainter &p, QRect &area, int column, int row) override;
 };

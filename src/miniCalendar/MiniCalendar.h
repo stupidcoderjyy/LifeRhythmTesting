@@ -28,6 +28,7 @@ enum ViewLevel {
 END_NAMESPACE
 
 class MiniCalendar : public Widget {
+    Q_OBJECT
 public:
     using ContentLayer = mini_calendar::ContentLayer;
     using TitleLayer = mini_calendar::TitleLayer;
@@ -40,7 +41,6 @@ protected:
     SlotsPainterLayer* background;
     SlotsPainter* painterWeekdayTitle;
     SlotsPainter* painters[3];
-private:
     TitleLayer *layerTitle;
     QVBoxLayout *bottom;
     ViewLevel viewLevel;
@@ -51,9 +51,11 @@ public:
     explicit MiniCalendar(QWidget* parent = nullptr, bool initInConstructor = true);
     void loadDate(const QDate& date);
     void setMaxViewLevel(ViewLevel level);
+signals:
+    void sigMiniCalendarChanged();
 protected:
+    virtual void syncWidget();
     void initWidget() override;
-    void onDataChanged();
 private:
     void setViewLevel(ViewLevel levelNew);
     void updateTitle() const;

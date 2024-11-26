@@ -26,22 +26,25 @@ void DropDownMenu::focusOutEvent(QFocusEvent *event) {
 }
 
 DropDown::DropDown(QWidget *parent, bool i): FocusContainer(parent, i),
-                                             menu(), pressLock(), menuOpen() {
+        menu(), pressLock(), menuOpen() {
 }
 
 void DropDown::onFinishedParsing(Handlers &handlers, NBT *widgetTag) {
     auto* menuTag = widgetTag->get("menu")->asCompound();
     if (menuTag) {
-        auto* wf = WidgetFactory::fromNbt("DropDownMenu", menuTag);
+        auto* wfMenu = WidgetFactory::fromNbt("DropDownMenu", menuTag);
+        auto* wfDropDown = WidgetFactory::factoryInParse();
+        wfMenu->include(wfDropDown);
+        wfMenu->overridePointerStorage(wfDropDown);
         try {
-            wf->parse();
+            wfMenu->parse();
         } catch (Error&) {
-            delete wf;
+            delete wfMenu;
             throw;
         }
-        handlers << [wf](QWidget *w) {
-            wf->apply(nullptr, static_cast<DropDown*>(w)->menu);
-            delete wf;
+        handlers << [wfMenu](QWidget *w) {
+            wfMenu->apply(nullptr, static_cast<DropDown*>(w)->menu);
+            delete wfMenu;
         };
     }
 }
