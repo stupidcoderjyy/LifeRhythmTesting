@@ -34,7 +34,8 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
-    void initWidget() override;
+private:
+    void init0();
 };
 
 inline DropDownMenu * DropDown::getMenu() const {

@@ -22,6 +22,7 @@ protected:
     bool activatedOnPress;
     bool hasImg;
     bool enabled;
+    bool hasFocus;
     Mode type;
     QPixmap imgNormal, imgDisabled;
 private:
@@ -40,6 +41,7 @@ public:
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     inline void setActivateOnPress(bool aop);
     inline void setButtonMode(Mode type);
+    inline void setHasFocus(bool hasFocus);
     static void mainInit();
 signals:
     void sigActivated();
@@ -59,6 +61,10 @@ inline void Button::setButtonMode(Mode t) {
 
 inline void Button::setActivateOnPress(bool aop) {
     activatedOnPress = aop;
+}
+
+inline void Button::setHasFocus(bool hf) {
+    hasFocus = hf;
 }
 
 #endif //BUTTON_H

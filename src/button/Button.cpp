@@ -4,12 +4,12 @@
 
 #include "Button.h"
 
+#include <FocusManager.h>
 #include <NBT.h>
 
 #include "Styles.h"
 #include "WidgetUtil.h"
 #include "QMouseEvent"
-#include "FocusManager.h"
 
 QString Button::qssNormal{};
 QString Button::qssHovered{};
@@ -19,7 +19,7 @@ QString Button::qssSelectedDisabled{};
 
 Button::Button(QWidget *parent, bool initInConstructor): Label(parent, initInConstructor),
         running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
-        enabled(true), type(Click) {
+        enabled(true), type(Click), hasFocus(true) {
     setAlignment(Qt::AlignCenter);
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
@@ -80,9 +80,9 @@ void Button::setButtonEnabled(bool e) {
 }
 
 void Button::setButtonStyleEnabled(bool e) {
-    if (enabled != e) {
-        enabled = e;
-        if (!e) {
+    if (hasStyle != e) {
+        hasStyle = e;
+        if (e) {
             setStyleSheet(qssNormal);
         }
     }
@@ -134,6 +134,12 @@ void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
             static_cast<Button*>(w)->setActivateOnPress(activeOnPress);
         };
     }
+    if (widgetTag->contains("focus", Data::BOOL)) {
+        bool hasFocus = widgetTag->getBool("focus");
+        handlers << [hasFocus](QWidget *w) {
+            static_cast<Button*>(w)->setHasFocus(hasFocus);
+        };
+    }
 }
 
 void Button::mainInit() {
@@ -151,6 +157,7 @@ void Button::enterEvent(QEvent *event) {
     if (hasStyle && (type != Select || !selected)) {
         setStyleSheet(qssHovered);
     }
+    QWidget::enterEvent(event);
 }
 
 void Button::mouseReleaseEvent(QMouseEvent *ev) {
@@ -160,6 +167,7 @@ void Button::mouseReleaseEvent(QMouseEvent *ev) {
     if (!activatedOnPress) {
         handleButtonActivate(ev);
     }
+    QWidget::mouseReleaseEvent(ev);
 }
 
 void Button::mousePressEvent(QMouseEvent *ev) {
@@ -169,10 +177,13 @@ void Button::mousePressEvent(QMouseEvent *ev) {
     if (hasStyle) {
         setStyleSheet(qssPressed);
     }
-    FocusManager::mark(this);
+    if (hasFocus) {
+        FocusManager::mark(this);
+    }
     if (activatedOnPress) {
         handleButtonActivate(ev);
     }
+    ev->ignore();
 }
 
 void Button::leaveEvent(QEvent *event) {
@@ -182,6 +193,7 @@ void Button::leaveEvent(QEvent *event) {
     if (hasStyle && (type != Select || !selected)) {
         setStyleSheet(qssNormal);
     }
+    QWidget::leaveEvent(event);
 }
 
 void Button::handleButtonActivate(QMouseEvent *ev) {

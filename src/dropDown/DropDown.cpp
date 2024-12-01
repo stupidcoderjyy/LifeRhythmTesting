@@ -8,6 +8,7 @@
 #include <WidgetUtil.h>
 #include <WidgetFactory.h>
 #include <Error.h>
+#include <QDebug>
 
 DropDownMenu::DropDownMenu(QWidget *parent): Menu(parent) {
     setWindowModality(Qt::NonModal);
@@ -43,7 +44,9 @@ void DropDown::onFinishedParsing(Handlers &handlers, NBT *widgetTag) {
             throw;
         }
         handlers << [wfMenu](QWidget *w) {
-            wfMenu->apply(nullptr, static_cast<DropDown*>(w)->menu);
+            auto dd = static_cast<DropDown*>(w);
+            dd->init0();
+            wfMenu->apply(nullptr, dd->menu);
             delete wfMenu;
         };
     }
@@ -81,8 +84,7 @@ void DropDown::focusOutEvent(QFocusEvent *event) {
     }
 }
 
-void DropDown::initWidget() {
-    FocusContainer::initWidget();
+void DropDown::init0() {
     menu = new DropDownMenu();
     connect(menu, &DropDownMenu::sigSelectOption, this, [this] {
         syncWidgetToData();

@@ -23,6 +23,7 @@ set(INCLUDES
 #        src/input_text_label
 #        src/jbTextButton
         src/label
+        src/listWidget
         src/menu
         src/miniCalendar
         src/slotsPainter
@@ -48,6 +49,8 @@ set(SRC_FILES
 #        src/jbTextButton/JbTextButton.h
         src/label/Label.h
         src/label/Label.cpp
+        src/listWidget/ListWidget.h
+        src/listWidget/ListWidget.cpp
         src/menu/Menu.h
         src/menu/Menu.cpp
         src/miniCalendar/MiniCalendar.cpp

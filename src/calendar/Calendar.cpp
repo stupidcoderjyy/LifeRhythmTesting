@@ -4,15 +4,20 @@
 
 #include "Calendar.h"
 
+#include <RcManagers.h>
+
 USING_NAMESPACE(lr)
 
 CalendarData::CalendarData(): viewType(ViewType::D3), dateStart(QDate::currentDate()) {
 }
 
+Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic) {
+}
+
 USING_NAMESPACE(lr::calendar)
 
 DropDownMiniCalendar::DropDownMiniCalendar(QWidget *parent, bool iic): MiniCalendar(parent, iic),
-        layerDay(), viewType() {
+                                                                       layerDay(), viewType() {
 }
 
 void DropDownMiniCalendar::syncDataToWidget() {
@@ -106,4 +111,63 @@ void LayerDay::drawSlot(QPainter &p, QRect &area, int column, int row) {
         }
     }
     count++;
+}
+
+DataRange::DataRange(int type): days(type) {
+}
+
+ItemRange::ItemRange(QWidget *parent, bool iic): ListItem(parent, iic), label() {
+}
+
+void ItemRange::initWidget() {
+    label = getPointer<Label>("l");
+}
+
+void ItemRange::syncDataToWidget() {
+    if (auto md = wData->cast<DataRange>()) {
+        label->setText(QString::number(md->days) + "天");
+    }
+}
+
+void ItemRange::enterEvent(QEvent *event) {
+    setState(1);
+}
+
+void ItemRange::leaveEvent(QEvent *event) {
+    setState(0);
+}
+
+ListRange::ListRange(QWidget *parent, bool iic): ListWidget(parent, iic) {
+}
+
+ListItem * ListRange::newItem() {
+    return WidgetFactoryStorage::get("test:calendar/item_range")->applyAndCast<ItemRange>();
+}
+
+DropDownRange::DropDownRange(QWidget *parent, bool iic): DropDown(parent, iic), label(), list(), viewType() {
+}
+
+void DropDownRange::syncWidgetToData() {
+    if (auto md = wData->cast<CalendarData>()) {
+        md->viewType = viewType;
+        emit md->sigDataChanged();
+    }
+}
+
+void DropDownRange::initWidget() {
+    DropDown::initWidget();
+    label = getPointer<Label>("l");
+    list = getPointer<ListRange>("list");
+    auto cd = new ListData;
+    for (int t = 1; t <= 7; t++) {
+        cd->append(new DataRange(t));
+    }
+    list->setRowHeight(29);
+    list->setFixedHeight(29 * 7);
+    list->setData(cd);
+    connect(cd, &ListData::sigDataSelected, this, [this, cd](int, int cur) {
+        viewType = static_cast<ViewType>(cur);
+        cd->selectData(-1);
+        emit menu->sigSelectOption();
+    });
 }

@@ -4,8 +4,12 @@
 
 #ifndef CALENDAR_H
 #define CALENDAR_H
+#include <ListData.h>
+#include <ListWidget.h>
 #include <Namespaces.h>
 #include <WidgetData.h>
+
+#include "DropDown.h"
 #include "MiniCalendar.h"
 
 BEGIN_NAMESPACE(lr)
@@ -25,6 +29,11 @@ public:
     QDate dateStart;
 public:
     CalendarData();
+};
+
+class Calendar : public Widget {
+public:
+    explicit Calendar(QWidget* parent = nullptr, bool iic = true);
 };
 
 BEGIN_NAMESPACE(calendar)
@@ -61,6 +70,45 @@ private:
     void mouseLeaved() override;
     void beforeDrawing(QPainter &p) override;
     void drawSlot(QPainter &p, QRect &area, int column, int row) override;
+};
+
+class DataRange : public WidgetData {
+    using ViewType = calender::ViewType;
+    friend class ItemRange;
+private:
+    int days;
+public:
+    explicit DataRange(int days);
+};
+
+class ItemRange : public ListItem {
+private:
+    Label* label;
+public:
+    explicit ItemRange(QWidget* parent = nullptr, bool iic = true);
+    void initWidget() override;
+    void syncDataToWidget() override;
+    void enterEvent(QEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+};
+
+class ListRange : public ListWidget {
+    Q_OBJECT
+public:
+    explicit ListRange(QWidget* parent = nullptr, bool iic = true);
+    ListItem *newItem() override;
+};
+
+class DropDownRange : public DropDown {
+    using ViewType = calender::ViewType;
+private:
+    Label* label;
+    ListRange* list;
+    ViewType viewType;
+public:
+    explicit DropDownRange(QWidget* parent = nullptr, bool iic = true);
+    void syncWidgetToData() override;
+    void initWidget() override;
 };
 
 END_NAMESPACE

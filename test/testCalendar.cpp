@@ -14,13 +14,33 @@ int main(int argc, char* argv[]) {
     cfg.setMode(Config::Test);
     lr.setConfig(cfg);
     lr.onMainInit([] {
+        Button::mainInit();
         auto f = WidgetFactoryStorage::get("test:widget_mini_calendar");
+        regClazz(f, Widget);
         regClazz(f, Button);
         regClazz(f, ArrowButton);
-        Button::mainInit();
-        f = WidgetFactoryStorage::get("test:widget_calendar");
+        f = WidgetFactoryStorage::get("test:calendar/widget_calendar");
+        regClazz(f, Widget);
         regClazz(f, calendar::DropDownMiniCalendar);
         regClazz(f, DropDown);
+        regClazz(f, Calendar);
+        regClazz(f, ArrowButton);
+        regClazz(f, Button);
+        f = WidgetFactoryStorage::get("test:calendar/item_range");
+        regClazz(f, Widget);
+        regClazz(f, calendar::ItemRange);
+        regClazz(f, Label);
+        f = WidgetFactoryStorage::get("test:calendar/dropdown_range");
+        regClazz(f, Widget);
+        regClazz(f, calendar::DropDownRange);
+        regClazz(f, Label);
+        regClazz(f, ArrowButton);
+        regClazz(f, calendar::ListRange);
+        f = WidgetFactoryStorage::get("test:calendar/dropdown_mini_calendar");
+        regClazz(f, Widget);
+        regClazz(f, calendar::DropDownMiniCalendar);
+        regClazz(f, DropDown);
+        regClazz(f, Label);
     });
     lr.onPostInit([] {
         auto parent = new QWidget;
@@ -29,11 +49,7 @@ int main(int argc, char* argv[]) {
         auto layout = new QVBoxLayout(parent);
         parent->setLayout(layout);
 
-        auto* dp = WidgetFactoryStorage::get("test:widget_calendar")->applyAndCast<DropDown>();
-        auto cd = new CalendarData;
-        auto mc = dp->getPointer<calendar::DropDownMiniCalendar>("c");
-        mc->setData(cd);
-        mc->syncDataToWidget();
+        auto* dp = WidgetFactoryStorage::get("test:calendar/widget_calendar")->applyAndCast<Calendar>();
 
         layout->addWidget(dp);
 
