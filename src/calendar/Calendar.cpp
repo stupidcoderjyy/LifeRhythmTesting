@@ -11,16 +11,85 @@ USING_NAMESPACE(lr)
 CalendarData::CalendarData(): viewType(ViewType::D3), dateStart(QDate::currentDate()) {
 }
 
-Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic) {
+Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic), dropDownMc(), miniCalendar(),
+                                               labelRange(), labelDate() {
+}
+
+void Calendar::setData(WidgetData *d) {
+    if (dynamic_cast<CalendarData*>(d) && !wData) {
+        Widget::setData(d);
+        initWidget();
+    }
+}
+
+void Calendar::syncDataToWidget() {
+    if (auto* cd = wData->cast<CalendarData>()) {
+        miniCalendar->syncDataToWidget();
+        labelRange->setText(QString::number(cd->viewType) + "天");
+        labelRange->setSizeToText();
+        QString s;
+        switch (cd->viewType) {
+            case calendar::Month: {
+                s = cd->dateStart.toString("yyyy年MM月");
+                break;
+            }
+            case calendar::D1: {
+                s = cd->dateStart.toString("yyyy年 MM月dd日");
+                break;
+            }
+            default: {
+                auto d = cd->dateStart, d1 = d.addDays(cd->viewType - 1);
+                if (d.year() == d1.year()) {
+                    s = d.toString("yyyy年 MM月dd日");
+                    s += " ~ ";
+                    s += d1.toString("MM月dd日");
+                } else {
+                    s = d.toString("yyyy年MM月dd日");
+                    s += " ~ ";
+                    s += d1.toString("yyyy年MM月dd日");
+                }
+                break;
+            }
+        }
+        labelDate->setText(s);
+        labelDate->setSizeToText();
+    }
+}
+
+void Calendar::connectModelView() {
+    dc << connect(wData, &WidgetData::sigDataChanged, this, &Calendar::syncDataToWidget);
+}
+
+void Calendar::initWidget() {
+    if (wData && !prepared) {
+        auto cd = wData->cast<CalendarData>();
+        dropDownMc = getPointer<DropDown>("dropdown_mini_calendar");
+        labelDate = dropDownMc->getPointer<Label>("l");
+        miniCalendar = dropDownMc->getPointer<calendar::MiniCalendarDropDown>("c");
+        miniCalendar->setData(cd);
+        connect(miniCalendar, &MiniCalendar::sigRelease, this, [this] {
+            if (miniCalendar->getViewLevel() == mini_calendar::Day) {
+                miniCalendar->syncWidgetToData();
+                emit dropDownMc->getMenu()->sigSelectOption();
+            }
+        });
+
+        auto dp = getPointer<DropDown>("dropdown_range");
+        dp->setData(cd);
+        labelRange = dp->getPointer<Label>("l");
+
+        syncDataToWidget();
+        prepared = true;
+    }
 }
 
 USING_NAMESPACE(lr::calendar)
 
-DropDownMiniCalendar::DropDownMiniCalendar(QWidget *parent, bool iic): MiniCalendar(parent, iic),
+MiniCalendarDropDown::MiniCalendarDropDown(QWidget *parent, bool iic): MiniCalendar(parent, iic),
                                                                        layerDay(), viewType() {
 }
 
-void DropDownMiniCalendar::syncDataToWidget() {
+void MiniCalendarDropDown::syncDataToWidget() {
     if (auto md = wData->cast<CalendarData>()) {
         dateStart = md->dateStart;
         viewType = md->viewType;
@@ -28,7 +97,7 @@ void DropDownMiniCalendar::syncDataToWidget() {
     }
 }
 
-void DropDownMiniCalendar::syncWidgetToData() {
+void MiniCalendarDropDown::syncWidgetToData() {
     if (auto md = wData->cast<CalendarData>()) {
         md->dateStart = dateStart;
         md->viewType = viewType;
@@ -36,16 +105,21 @@ void DropDownMiniCalendar::syncWidgetToData() {
     }
 }
 
-void DropDownMiniCalendar::initWidget() {
+void MiniCalendarDropDown::initWidget() {
     MiniCalendar::initWidget();
     auto p = painters[ViewLevel::Day];
     layerDay = new LayerDay;
     p->addLayer(layerDay);
     p->setMouseTracking(true);
-    syncDataToWidget();
+    connect(this, &MiniCalendar::sigPress, [this](const QDate& d) {
+        if (viewLevel == ViewLevel::Day) {
+            dateStart = d;
+            syncWidget();
+        }
+    });
 }
 
-void DropDownMiniCalendar::syncWidget() {
+void MiniCalendarDropDown::syncWidget() {
     MiniCalendar::syncWidget();
     if (!prepared) {
         return;
@@ -166,8 +240,9 @@ void DropDownRange::initWidget() {
     list->setFixedHeight(29 * 7);
     list->setData(cd);
     connect(cd, &ListData::sigDataSelected, this, [this, cd](int, int cur) {
-        viewType = static_cast<ViewType>(cur);
+        viewType = static_cast<ViewType>(cur + 1);
         cd->selectData(-1);
+        syncWidgetToData();
         emit menu->sigSelectOption();
     });
 }

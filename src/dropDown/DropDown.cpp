@@ -142,7 +142,6 @@ void DropDown::initWidget() {
 void DropDown::init0() {
     menu = new DropDownMenu();
     connect(menu, &DropDownMenu::sigSelectOption, this, [this] {
-        syncWidgetToData();
         emit menu->sigAboutToClose();
         menu->close();
     });

@@ -6,7 +6,7 @@
 #include "DropDown.h"
 
 USING_NAMESPACE(lr)
-USING_NAMESPACE(lr::calender)
+USING_NAMESPACE(lr::calendar)
 
 int main(int argc, char* argv[]) {
     LifeRhythm lr(argc, argv);
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         regClazz(f, ArrowButton);
         f = WidgetFactoryStorage::get("test:calendar/widget_calendar");
         regClazz(f, Widget);
-        regClazz(f, calendar::DropDownMiniCalendar);
+        regClazz(f, calendar::MiniCalendarDropDown);
         regClazz(f, DropDown);
         regClazz(f, Calendar);
         regClazz(f, ArrowButton);
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         regClazz(f, calendar::ListRange);
         f = WidgetFactoryStorage::get("test:calendar/dropdown_mini_calendar");
         regClazz(f, Widget);
-        regClazz(f, calendar::DropDownMiniCalendar);
+        regClazz(f, calendar::MiniCalendarDropDown);
         regClazz(f, DropDown);
         regClazz(f, Label);
     });
@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
         parent->setLayout(layout);
 
         auto* dp = WidgetFactoryStorage::get("test:calendar/widget_calendar")->applyAndCast<Calendar>();
+        dp->setData(new CalendarData);
 
         layout->addWidget(dp);
 

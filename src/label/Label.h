@@ -15,9 +15,15 @@ public:
     explicit Label(QWidget* parent, bool initInConstructor = true);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
     void onStateRespondersParsing(Handlers &responders, NBT *stateTag) override;
+    inline void setSizeToText();
+    static QSize baseTextSize(const QString& text, const QFont& font);
 protected:
     void mouseReleaseEvent(QMouseEvent *ev) override;
     void mousePressEvent(QMouseEvent *ev) override;
 };
+
+inline void Label::setSizeToText() {
+    setFixedSize(baseTextSize(text(), font()));
+}
 
 #endif //LABEL_H

@@ -20,27 +20,33 @@
             type: "ArrowButton"
             base: "Left"
             activated: "Left"
+            pointer: true
         }
         btnMc: {
             loader: "test:calendar/dropdown_mini_calendar"
+            pointer: true
         }
         btnNext: {
             type: "ArrowButton"
             base: "Right"
             activated: "Right"
+            pointer: true
         }
         dp: {
             loader: "test:calendar/dropdown_range"
+            pointer: true
         }
         btnWeek: {
             type: "Button"
             mode: "Select"
             img: "lr:pen_30x30"
+            pointer: true
         }
         btnMonth: {
             type: "Button"
             mode: "Select"
             img: "lr:reload_30x30"
+            pointer: true
         }
     }
 }

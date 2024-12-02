@@ -20,7 +20,7 @@ void ListItem::syncDataToWidget() {
     selected = s;
 }
 
-void ListItem::mousePressEvent(QMouseEvent *event) {
+void ListItem::mouseReleaseEvent(QMouseEvent *event) {
     if (wData) {
         listData->selectData(dataIdx);
     }

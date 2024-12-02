@@ -27,9 +27,8 @@ Button::Button(QWidget *parent, bool initInConstructor): Label(parent, initInCon
 
 void Button::setButtonText(const QString &text) {
     hasImg = false;
-    QFontMetrics metrics(font());
-    setMinimumSize(metrics.horizontalAdvance(text) + 10, metrics.height() + 10);
     setText(text);
+    setSizeToText();
 }
 
 void Button::setButtonImg(const QPixmap &p1, const QPixmap& p2) {

@@ -40,6 +40,11 @@ void Label::onStateRespondersParsing(Handlers &responders, NBT *stateTag) {
     onPostParsing(responders, stateTag);
 }
 
+QSize Label::baseTextSize(const QString &text, const QFont &font) {
+    QFontMetrics metrics(font);
+    return QSize(metrics.horizontalAdvance(text) + 10, metrics.height() + 10);
+}
+
 void Label::mouseReleaseEvent(QMouseEvent *ev) {
     ev->ignore();
 }

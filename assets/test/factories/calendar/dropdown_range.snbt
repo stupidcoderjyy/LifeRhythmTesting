@@ -4,7 +4,7 @@
     children: ["l", "arr"]
     layout: {
         type: "Horizontal"
-        margins: [0,0,0,0]
+        margins: [10,0,0,0]
         spacing: 0
     }
     l: {

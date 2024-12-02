@@ -14,16 +14,18 @@
 
 BEGIN_NAMESPACE(lr)
 
-BEGIN_NAMESPACE(calender)
+BEGIN_NAMESPACE(calendar)
 
 enum ViewType {
     Month, D1, D2, D3, D4, D5, D6, D7
 };
 
+class MiniCalendarDropDown;
+
 END_NAMESPACE
 
 class CalendarData : public WidgetData {
-    using ViewType = calender::ViewType;
+    using ViewType = calendar::ViewType;
 public:
     ViewType viewType;
     QDate dateStart;
@@ -32,22 +34,31 @@ public:
 };
 
 class Calendar : public Widget {
+private:
+    DropDown* dropDownMc;
+    calendar::MiniCalendarDropDown* miniCalendar;
+    Label* labelRange;
+    Label* labelDate;
 public:
     explicit Calendar(QWidget* parent = nullptr, bool iic = true);
+    void setData(WidgetData *d) override;
+    void syncDataToWidget() override;
+    void connectModelView() override;
+protected:
+    void initWidget() override;
 };
 
 BEGIN_NAMESPACE(calendar)
 
 class LayerDay;
 
-class DropDownMiniCalendar : public MiniCalendar {
-    using ViewType = calender::ViewType;
+class MiniCalendarDropDown : public MiniCalendar {
 private:
     LayerDay* layerDay;
     QDate dateStart;
     ViewType viewType;
 public:
-    explicit DropDownMiniCalendar(QWidget* parent = nullptr, bool iic = true);
+    explicit MiniCalendarDropDown(QWidget* parent = nullptr, bool iic = true);
     void syncDataToWidget() override;
     void syncWidgetToData() override;
 protected:
@@ -56,7 +67,6 @@ protected:
 };
 
 class LayerDay : public SlotsPainterLayer {
-    using ViewType = calender::ViewType;
 private:
     int len;
     int count;
@@ -73,7 +83,6 @@ private:
 };
 
 class DataRange : public WidgetData {
-    using ViewType = calender::ViewType;
     friend class ItemRange;
 private:
     int days;
@@ -100,7 +109,6 @@ public:
 };
 
 class DropDownRange : public DropDown {
-    using ViewType = calender::ViewType;
 private:
     Label* label;
     ListRange* list;

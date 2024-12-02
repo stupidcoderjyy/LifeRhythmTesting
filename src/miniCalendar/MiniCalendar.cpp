@@ -105,7 +105,6 @@ void MiniCalendar::syncWidget() {
     }
     layerContent->setVal(maxViewLevel, viewLevel, firstVal, mark1, mark2, mark3);
     updateTitle();
-    emit sigMiniCalendarChanged();
 }
 
 #define TIMES 9
@@ -115,7 +114,7 @@ void MiniCalendar::syncWidget() {
 #define HEIGHT 8 * SLOT_SIZE_1
 
 void MiniCalendar::initWidget() {
-    setFixedSize(WIDTH, HEIGHT);
+    setFixedSize(WIDTH, HEIGHT);    //252x288
     WidgetFactoryStorage::get("test:widget_mini_calendar")->apply(nullptr, this);
     prev = getPointer<ArrowButton>("prev");
     connect(prev, &ArrowButton::sigSelected, this, [this] {
@@ -147,6 +146,12 @@ void MiniCalendar::initWidget() {
     connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
     });
+    connect(painterDay, &SlotsPainter::sigPressSlot, this, [this](int c, int r) {
+        emit sigPress(dateTopLeft.addDays(r * 7 + c));
+    });
+    connect(painterDay, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
+        emit sigRelease(dateTopLeft.addDays(r * 7 + c));
+    });
 
     auto *painterMonth = new SlotsPainter(this);
     painterMonth->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
@@ -154,11 +159,16 @@ void MiniCalendar::initWidget() {
     painterMonth->addLayer(background);
     painterMonth->close();
     connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
+        auto d = dateTopLeft.addMonths((r << 2) + c);
+        emit sigRelease(d);
         if (maxViewLevel == Day) {
-            dateTopLeft = dateTopLeft.addMonths((r << 2) + c);
+            dateTopLeft = d;
             setViewLevel(Day);
             syncWidget();
         }
+    });
+    connect(painterMonth, &SlotsPainter::sigPressSlot, this, [this](int c, int r) {
+        emit sigRelease(dateTopLeft.addMonths((r << 2) + c));
     });
     connect(painterMonth, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
@@ -170,11 +180,16 @@ void MiniCalendar::initWidget() {
     painterYear->close();
     painterYear->addLayer(background);
     connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
+        auto d = dateTopLeft.addYears((r << 2) + c);
+        emit sigRelease(d);
         if (maxViewLevel > Year) {
-            dateTopLeft = dateTopLeft.addYears((r << 2) + c);
+            dateTopLeft = d;
             setViewLevel(Month);
             syncWidget();
         }
+    });
+    connect(painterYear, &SlotsPainter::sigPressSlot, this, [this](int c, int r) {
+        emit sigRelease(dateTopLeft.addYears((r << 2) + c));
     });
     connect(painterYear, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);

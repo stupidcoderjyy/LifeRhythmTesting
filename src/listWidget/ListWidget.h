@@ -24,7 +24,7 @@ public:
     explicit ListItem(QWidget* parent = nullptr, bool iic = true);
     void syncDataToWidget() override;
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 private:
     void setList(ListData* data) {
         this->listData = data;
