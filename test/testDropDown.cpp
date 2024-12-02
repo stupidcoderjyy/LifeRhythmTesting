@@ -10,6 +10,7 @@
 #include <QLayout>
 #include <RcManagers.h>
 
+#include "Button.h"
 #include "DropDown.h"
 #include "Label.h"
 
@@ -66,10 +67,12 @@ int main(int argc, char *argv[]) {
     cfg.setMode(Config::Test);
     lr.setConfig(cfg);
     lr.onMainInit([] {
+        Button::mainInit();
         auto f = WidgetFactoryStorage::get("test:test_drop_down");
         regClazz(f, DropDown);
         regClazz(f, Label);
         regClazz(f, List);
+        regClazz(f, Widget);
     });
     lr.onPostInit([] {
         auto d = new ListData;
@@ -77,9 +80,12 @@ int main(int argc, char *argv[]) {
             d->append(new TestData(i));
         }
 
-        auto dropDown = WidgetFactoryStorage::get("test:test_drop_down")->applyAndCast<DropDown>();
+        auto dp1 = WidgetFactoryStorage::get("test:test_drop_down")->applyAndCast<DropDown>();
+        auto dp2 = new DropDown();
+        dp2->setStyle(DropDown::Jetbrains);
+        dp2->setFixedSize(200,50);
 
-        auto l = dropDown->getPointer<List>("l");
+        auto l = dp1->getPointer<List>("l");
         l->setFixedSize(200, 200);
         l->setSlotSize(50, 50);
         l->setColumnCount(7);
@@ -93,7 +99,8 @@ int main(int argc, char *argv[]) {
         auto layout = new QHBoxLayout(parent);
         parent->setLayout(layout);
 
-        layout->addWidget(dropDown);
+        layout->addWidget(dp1);
+        layout->addWidget(dp2);
         parent->show();
     });
     return lr.launch();

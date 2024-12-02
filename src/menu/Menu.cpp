@@ -9,6 +9,7 @@
 Menu::Menu(QWidget *parent, bool initInConstructor): QWidget(parent), StandardWidget(initInConstructor) {
     setWindowFlag(Qt::FramelessWindowHint);
     setFocusPolicy(Qt::NoFocus);
+    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
 
 void Menu::focusOutEvent(QFocusEvent *event) {

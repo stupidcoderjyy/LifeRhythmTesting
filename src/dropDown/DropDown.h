@@ -21,25 +21,42 @@ protected:
 };
 
 class DropDown : public FocusContainer {
+public:
+    enum Style {
+        Jetbrains,
+        Button
+    };
 protected:
     DropDownMenu *menu;
     bool pressLock;
     bool menuOpen;
+    Style style;
 public:
     explicit DropDown(QWidget *parent = nullptr, bool initInConstructor = true);
+    void onPostParsing(Handlers &handlers, NBT *nbt) override;
     void onFinishedParsing(Handlers &handlers, NBT *widgetTag) override;
     ~DropDown() override;
     inline DropDownMenu *getMenu() const;
+    inline void setStyle(Style style);
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+    void enterEvent(QEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+    QString getNormalQss() override;
+    QString getFocusedQss() override;
+    void initWidget() override;
 private:
     void init0();
 };
 
 inline DropDownMenu * DropDown::getMenu() const {
     return menu;
+}
+
+inline void DropDown::setStyle(Style s) {
+    style = s;
 }
 
 #endif //DROPDOWN_H

@@ -10,6 +10,11 @@
 class Button : public Label {
     Q_OBJECT
 public:
+    static QString QSS_NORMAL;
+    static QString QSS_HOVERED;
+    static QString QSS_PRESSED;
+    static QString QSS_SELECTED;
+    static QString QSS_SELECTED_DISABLED;
     enum Mode {
         Click,
         Select,
@@ -25,12 +30,6 @@ protected:
     bool hasFocus;
     Mode type;
     QPixmap imgNormal, imgDisabled;
-private:
-    static QString qssNormal;
-    static QString qssHovered;
-    static QString qssPressed;
-    static QString qssSelected;
-    static QString qssSelectedDisabled;
 public:
     explicit Button(QWidget* parent = nullptr, bool initInConstructor = true);
     void setButtonText(const QString& text);

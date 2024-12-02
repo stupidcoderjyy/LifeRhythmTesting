@@ -10,12 +10,13 @@
 #include "Styles.h"
 #include "WidgetUtil.h"
 #include "QMouseEvent"
+#include <QDebug>
 
-QString Button::qssNormal{};
-QString Button::qssHovered{};
-QString Button::qssPressed{};
-QString Button::qssSelected{};
-QString Button::qssSelectedDisabled{};
+QString Button::QSS_NORMAL{};
+QString Button::QSS_HOVERED{};
+QString Button::QSS_PRESSED{};
+QString Button::QSS_SELECTED{};
+QString Button::QSS_SELECTED_DISABLED{};
 
 Button::Button(QWidget *parent, bool initInConstructor): Label(parent, initInConstructor),
         running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
@@ -46,6 +47,7 @@ void Button::setButtonEnabled(bool e) {
     }
     enabled = e;
     if (!hasStyle) {
+        setStyleSheet(QSS_NORMAL);
         return;
     }
     if (enabled) {
@@ -53,7 +55,7 @@ void Button::setButtonEnabled(bool e) {
             setPixmap(imgNormal);
             setFixedSize(imgNormal.size());
             if (type == Select && selected) {
-                setStyleSheet(qssSelected);
+                setStyleSheet(QSS_SELECTED);
             }
         } else {
             auto p = palette();
@@ -63,9 +65,9 @@ void Button::setButtonEnabled(bool e) {
         }
     } else {
         if (type == Select && selected) {
-            setStyleSheet(qssSelectedDisabled);
+            setStyleSheet(QSS_SELECTED_DISABLED);
         } else {
-            setStyleSheet(qssNormal);
+            setStyleSheet(QSS_NORMAL);
         }
         if (hasImg) {
             setPixmap(imgDisabled);
@@ -83,7 +85,7 @@ void Button::setButtonStyleEnabled(bool e) {
     if (hasStyle != e) {
         hasStyle = e;
         if (e) {
-            setStyleSheet(qssNormal);
+            setStyleSheet(QSS_NORMAL);
         }
     }
 }
@@ -99,11 +101,11 @@ void Button::setSelected(bool s) {
     }
     if (type == Select) {
         if (s) {
-            setStyleSheet(qssSelected);
+            setStyleSheet(QSS_SELECTED);
         } else if (isMouseHovered(this)) {
-            setStyleSheet(qssHovered);
+            setStyleSheet(QSS_HOVERED);
         } else {
-            setStyleSheet(qssNormal);
+            setStyleSheet(QSS_NORMAL);
         }
     }
 }
@@ -143,11 +145,11 @@ void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
 }
 
 void Button::mainInit() {
-    qssNormal = bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-    qssHovered = bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-    qssPressed = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-    qssSelected = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
-    qssSelectedDisabled = bg(Styles::CLEAR->rgbHex) + bd("2px", "solid", Styles::GRAY_1->rgbHex) + brad("2px");
+    QSS_NORMAL = bg(Styles::CLEAR->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    QSS_HOVERED = bg(Styles::GRAY_1->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    QSS_PRESSED = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    QSS_SELECTED = bg(Styles::GRAY_2->rgbHex) + bd("2px", "none", Styles::CLEAR->rgbHex) + brad("2px");
+    QSS_SELECTED_DISABLED = bg(Styles::CLEAR->rgbHex) + bd("2px", "solid", Styles::GRAY_1->rgbHex) + brad("2px");
 }
 
 void Button::enterEvent(QEvent *event) {
@@ -155,7 +157,7 @@ void Button::enterEvent(QEvent *event) {
         return;
     }
     if (hasStyle && (type != Select || !selected)) {
-        setStyleSheet(qssHovered);
+        setStyleSheet(QSS_HOVERED);
     }
     QWidget::enterEvent(event);
 }
@@ -175,7 +177,7 @@ void Button::mousePressEvent(QMouseEvent *ev) {
         return;
     }
     if (hasStyle) {
-        setStyleSheet(qssPressed);
+        setStyleSheet(QSS_PRESSED);
     }
     if (hasFocus) {
         FocusManager::mark(this);
@@ -191,7 +193,7 @@ void Button::leaveEvent(QEvent *event) {
         return;
     }
     if (hasStyle && (type != Select || !selected)) {
-        setStyleSheet(qssNormal);
+        setStyleSheet(QSS_NORMAL);
     }
     QWidget::leaveEvent(event);
 }
@@ -201,7 +203,7 @@ void Button::handleButtonActivate(QMouseEvent *ev) {
         return;
     }
     if (hasStyle && (type == Click || type == SelectClick)) {
-        setStyleSheet(qssHovered);
+        setStyleSheet(QSS_HOVERED);
     }
     if (type == Click) {
         emit sigActivated();

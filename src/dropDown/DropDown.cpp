@@ -10,6 +10,8 @@
 #include <Error.h>
 #include <QDebug>
 
+#include "Button.h"
+
 DropDownMenu::DropDownMenu(QWidget *parent): Menu(parent) {
     setWindowModality(Qt::NonModal);
     setAttribute(Qt::WA_DeleteOnClose, false);
@@ -27,7 +29,24 @@ void DropDownMenu::focusOutEvent(QFocusEvent *event) {
 }
 
 DropDown::DropDown(QWidget *parent, bool i): FocusContainer(parent, i),
-        menu(), pressLock(), menuOpen() {
+        menu(), pressLock(), menuOpen(), style(Jetbrains) {
+}
+
+void DropDown::onPostParsing(Handlers &handlers, NBT *nbt) {
+    if (nbt->contains("style", Data::STRING)) {
+        auto s = nbt->getString("style");
+        Style style;
+        if (s == "Jetbrains") {
+            style = Jetbrains;
+        } else if (s == "Button") {
+            style = Button;
+        } else {
+            throw Error("invalid dropdown style: " + s);
+        }
+        handlers << [style](QWidget *w) {
+            static_cast<DropDown*>(w)->setStyle(style);
+        };
+    }
 }
 
 void DropDown::onFinishedParsing(Handlers &handlers, NBT *widgetTag) {
@@ -71,6 +90,9 @@ void DropDown::mousePressEvent(QMouseEvent *event) {
         menu->show();
         menuOpen = true;
     }
+    if (!menuOpen && style == Button) {
+        setStyleSheet(Button::QSS_HOVERED);
+    }
 }
 
 void DropDown::mouseReleaseEvent(QMouseEvent *event) {
@@ -84,6 +106,39 @@ void DropDown::focusOutEvent(QFocusEvent *event) {
     }
 }
 
+void DropDown::enterEvent(QEvent *event) {
+    if (!menuOpen && style == Button) {
+        setStyleSheet(Button::QSS_HOVERED);
+    }
+}
+
+void DropDown::leaveEvent(QEvent *event) {
+    if (!menuOpen && style == Button) {
+        setStyleSheet(Button::QSS_NORMAL);
+    }
+}
+
+QString DropDown::getNormalQss() {
+    if (style == Jetbrains) {
+        return FocusContainer::getNormalQss();
+    }
+    return Button::QSS_NORMAL;
+}
+
+QString DropDown::getFocusedQss() {
+    if (style == Jetbrains) {
+        return FocusContainer::getFocusedQss();
+    }
+    return Button::QSS_SELECTED;
+}
+
+void DropDown::initWidget() {
+    FocusContainer::initWidget();
+    if (!prepared) {
+        init0();
+    }
+}
+
 void DropDown::init0() {
     menu = new DropDownMenu();
     connect(menu, &DropDownMenu::sigSelectOption, this, [this] {
@@ -94,6 +149,10 @@ void DropDown::init0() {
     connect(menu, &DropDownMenu::sigAboutToClose, this, [this] {
         pressLock = isMouseHovered(this);
         menuOpen = false;
+        if (style == Button) {
+            setStyleSheet(Button::QSS_NORMAL);
+        }
         FocusManager::popIfPeekMatch(this);
     });
+    prepared = true;
 }

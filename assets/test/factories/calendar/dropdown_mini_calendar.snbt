@@ -2,6 +2,7 @@
     type: "DropDown"
     children: ["label"]
     fixed_width: 100
+    style: "Button"
     label: {
         type: "Label"
         pointer: true
