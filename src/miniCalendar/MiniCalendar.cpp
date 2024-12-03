@@ -23,12 +23,31 @@ MiniCalendar::MiniCalendar(QWidget *parent, bool initInConstructor): Widget(pare
 }
 
 void MiniCalendar::loadDate(const QDate &date) {
-    dateTopLeft = QDate(date.year(), date.month(), 1);
+    switch (viewLevel) {
+        case Day: {
+            dateTopLeft = QDate(date.year(), date.month(), 1);
+            break;
+        }
+        case Month: {
+            dateTopLeft = QDate(date.year(), 1, 1);
+            break;
+        }
+        case Year: {
+        }
+    }
     syncWidget();
 }
 
 void MiniCalendar::setMaxViewLevel(ViewLevel level) {
+    if (prepared && viewLevel >= level) {
+        internalSwitchLevel(level);
+    }
     maxViewLevel = level;
+    syncWidget();
+}
+
+void MiniCalendar::setViewLevel(ViewLevel level) {
+    internalSwitchLevel(level);
     syncWidget();
 }
 
@@ -163,12 +182,12 @@ void MiniCalendar::initWidget() {
         emit sigRelease(d);
         if (maxViewLevel == Day) {
             dateTopLeft = d;
-            setViewLevel(Day);
+            internalSwitchLevel(Day);
             syncWidget();
         }
     });
     connect(painterMonth, &SlotsPainter::sigPressSlot, this, [this](int c, int r) {
-        emit sigRelease(dateTopLeft.addMonths((r << 2) + c));
+        emit sigPress(dateTopLeft.addMonths((r << 2) + c));
     });
     connect(painterMonth, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
@@ -184,12 +203,12 @@ void MiniCalendar::initWidget() {
         emit sigRelease(d);
         if (maxViewLevel > Year) {
             dateTopLeft = d;
-            setViewLevel(Month);
+            internalSwitchLevel(Month);
             syncWidget();
         }
     });
     connect(painterYear, &SlotsPainter::sigPressSlot, this, [this](int c, int r) {
-        emit sigRelease(dateTopLeft.addYears((r << 2) + c));
+        emit sigPress(dateTopLeft.addYears((r << 2) + c));
     });
     connect(painterYear, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
@@ -204,7 +223,7 @@ void MiniCalendar::initWidget() {
     bottom->addWidget(painterDay);
     ViewLevel l = qMin(viewLevel, maxViewLevel);
     if (viewLevel != l) {
-        setViewLevel(l);
+        internalSwitchLevel(l);
     }
     prepared = true;
     QTimer::singleShot(0, [this] {
@@ -213,7 +232,10 @@ void MiniCalendar::initWidget() {
     show();
 }
 
-void MiniCalendar::setViewLevel(ViewLevel levelNew) {
+void MiniCalendar::internalSwitchLevel(ViewLevel levelNew) {
+    if (levelNew == viewLevel) {
+        return;
+    }
     title->setButtonStyleEnabled(levelNew != Year);
     title->setButtonEnabled(levelNew != Year);
     if (viewLevel == Day) {
@@ -290,10 +312,10 @@ void MiniCalendar::handleArrowButton(bool add) {
 void MiniCalendar::handleButtonTitle() {
     switch (viewLevel) {
         case Day:
-            setViewLevel(Month);
+            internalSwitchLevel(Month);
             break;
         case Month:
-            setViewLevel(Year);
+            internalSwitchLevel(Year);
             break;
         default:
             break;
@@ -323,7 +345,7 @@ void MiniCalendar::ensureTopLeft() {
             break;
         }
         case Month: {
-            dateTopLeft = dateTopLeft.addMonths(-(dateTopLeft.month() & 0x3) + 1);
+            dateTopLeft = dateTopLeft.addMonths(-(dateTopLeft.month() - 1 & 0x3));
             break;
         }
         default: {
@@ -369,7 +391,7 @@ void ContentLayer::drawSlot(QPainter &p, QRect &area, int column, int row) {
         p.fillRect(area, Styles::GRAY_1->color);
     }
     if (count == mark1) {
-        p.setPen(Styles::GRAY_TEXT_0->color);
+        p.setPen(Styles::GRAY_TEXT_1->color);
         if (viewLevel != Year && mark1 > 0) {
             val = 1;
         }
@@ -402,7 +424,7 @@ void ContentLayer::mousePressed(int column, int row) {
 void TitleLayer::beforeDrawing(QPainter &p) {
     p.setFont(FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get());
     p.fillRect(parent->rect(), Styles::BLACK->color);
-    p.setPen(Styles::GRAY_TEXT_0->color);
+    p.setPen(Styles::GRAY_TEXT_1->color);
 }
 
 void TitleLayer::drawSlot(QPainter &p, QRect &area, int column, int row) {

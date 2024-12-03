@@ -108,7 +108,7 @@ void JbTextButton::updateBase() {
             break;
         }
         case Normal: {
-            content->setStyleSheet(qss_object("tbc", bg(Styles::CLEAR->rgbHex) + clr(Styles::GRAY_TEXT_0->rgbHex)));
+            content->setStyleSheet(qss_object("tbc", bg(Styles::CLEAR->rgbHex) + clr(Styles::GRAY_TEXT_1->rgbHex)));
             content->setFont(fontBuilder.get());
             break;
         }

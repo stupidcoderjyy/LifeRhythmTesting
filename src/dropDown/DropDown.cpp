@@ -87,6 +87,7 @@ void DropDown::mousePressEvent(QMouseEvent *event) {
         menu->activateWindow();
         auto p = getGlobalPos(this);
         moveWidget(menu, p.x(), p.y() + height() + 1);
+        emit sigMenuOpening();
         menu->show();
         menuOpen = true;
     }
@@ -152,6 +153,8 @@ void DropDown::init0() {
             setStyleSheet(Button::QSS_NORMAL);
         }
         FocusManager::popIfPeekMatch(this);
+        emit sigMenuClosing();
     });
+    connect(this, &DropDown::sigCloseMenu, menu, &DropDownMenu::sigSelectOption);
     prepared = true;
 }

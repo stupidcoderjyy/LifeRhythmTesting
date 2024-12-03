@@ -51,6 +51,7 @@ public:
     explicit MiniCalendar(QWidget* parent = nullptr, bool initInConstructor = true);
     void loadDate(const QDate& date);
     void setMaxViewLevel(ViewLevel level);
+    void setViewLevel(ViewLevel level);
     inline ViewLevel getViewLevel() const;
 signals:
     void sigPress(const QDate& date);
@@ -59,7 +60,7 @@ protected:
     virtual void syncWidget();
     void initWidget() override;
 private:
-    void setViewLevel(ViewLevel levelNew);
+    void internalSwitchLevel(ViewLevel levelNew);
     void updateTitle() const;
     void handleArrowButton(bool add);
     void handleButtonTitle();
@@ -72,7 +73,7 @@ inline MiniCalendar::ViewLevel MiniCalendar::getViewLevel() const {
 }
 
 BEGIN_NAMESPACE(mini_calendar)
-    class ContentLayer : public SlotsPainterLayer {
+class ContentLayer : public SlotsPainterLayer {
 private:
     int firstVal;
     int mark1, mark2, mark3, mark4;

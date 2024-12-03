@@ -26,12 +26,29 @@ END_NAMESPACE
 
 class CalendarData : public WidgetData {
     using ViewType = calendar::ViewType;
-public:
+private:
     ViewType viewType;
+    ViewType prevType;
     QDate dateStart;
 public:
     CalendarData();
+    void set(ViewType viewType, QDate dateStart);
+    inline ViewType getViewType() const;
+    inline ViewType getPrevType() const;
+    inline QDate getDateStart() const;
 };
+
+inline CalendarData::ViewType CalendarData::getViewType() const {
+    return viewType;
+}
+
+inline CalendarData::ViewType CalendarData::getPrevType() const {
+    return prevType;
+}
+
+inline QDate CalendarData::getDateStart() const {
+    return dateStart;
+}
 
 class Calendar : public Widget {
 private:
@@ -51,12 +68,15 @@ protected:
 BEGIN_NAMESPACE(calendar)
 
 class LayerDay;
+class LayerMonth;
 
 class MiniCalendarDropDown : public MiniCalendar {
 private:
     LayerDay* layerDay;
+    LayerMonth* layerMonth;
     QDate dateStart;
     ViewType viewType;
+    bool isViewTypeMonth;
 public:
     explicit MiniCalendarDropDown(QWidget* parent = nullptr, bool iic = true);
     void syncDataToWidget() override;
@@ -78,6 +98,22 @@ public:
 private:
     void mouseEntered(int column, int row) override;
     void mouseLeaved() override;
+    void beforeDrawing(QPainter &p) override;
+    void drawSlot(QPainter &p, QRect &area, int column, int row) override;
+};
+
+class LayerMonth : public SlotsPainterLayer {
+private:
+    int hovered;
+    int selected;
+    int count;
+    bool isViewTypeMonth;
+public:
+    LayerMonth();
+    void set(bool isViewTypeMonth, int s);
+    void mouseEntered(int column, int row) override;
+    void mouseLeaved() override;
+    bool shouldDraw() override;
     void beforeDrawing(QPainter &p) override;
     void drawSlot(QPainter &p, QRect &area, int column, int row) override;
 };
@@ -117,6 +153,13 @@ public:
     explicit DropDownRange(QWidget* parent = nullptr, bool iic = true);
     void syncWidgetToData() override;
     void initWidget() override;
+};
+
+class ButtonSwitchView : public Button {
+public:
+    explicit ButtonSwitchView(QWidget* parent = nullptr, bool iic = true);
+protected:
+    void handleButtonActivate(QMouseEvent *ev) override;
 };
 
 END_NAMESPACE

@@ -50,8 +50,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *ev) override;
     void mousePressEvent(QMouseEvent *ev) override;
     void leaveEvent(QEvent *event) override;
-private:
-    void handleButtonActivate(QMouseEvent* ev);
+    virtual void handleButtonActivate(QMouseEvent* ev);
 };
 
 inline void Button::setButtonMode(Mode t) {

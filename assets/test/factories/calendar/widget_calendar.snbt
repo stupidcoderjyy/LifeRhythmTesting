@@ -6,7 +6,8 @@
         margins: [0,0,0,0]
     }
     top: {
-        children: ["btnPrev", "btnMc", "btnNext", "dp", "btnWeek", "btnMonth"]
+        children: ["btnPrev", "btnNext", "btnMc", "dp", "btnWeek", "btnMonth"]
+        qss: "bg(GRAY_0)"
         layout: {
             type: "Horizontal"
             margins: [0,0,0,0]
@@ -37,15 +38,15 @@
             pointer: true
         }
         btnWeek: {
-            type: "Button"
+            type: "ButtonSwitchView"
             mode: "Select"
-            img: "lr:pen_30x30"
+            img: "lr:columns_30x30"
             pointer: true
         }
         btnMonth: {
-            type: "Button"
+            type: "ButtonSwitchView"
             mode: "Select"
-            img: "lr:reload_30x30"
+            img: "lr:table_30x30"
             pointer: true
         }
     }

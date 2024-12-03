@@ -21,6 +21,7 @@ protected:
 };
 
 class DropDown : public FocusContainer {
+    Q_OBJECT
 public:
     enum Style {
         Jetbrains,
@@ -38,6 +39,10 @@ public:
     ~DropDown() override;
     inline DropDownMenu *getMenu() const;
     inline void setStyle(Style style);
+signals:
+    void sigMenuOpening();
+    void sigMenuClosing();
+    void sigCloseMenu();
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

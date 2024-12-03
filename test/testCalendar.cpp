@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
         regClazz(f, Calendar);
         regClazz(f, ArrowButton);
         regClazz(f, Button);
+        regClazz(f, ButtonSwitchView);
         f = WidgetFactoryStorage::get("test:calendar/item_range");
         regClazz(f, Widget);
         regClazz(f, calendar::ItemRange);
@@ -45,7 +46,7 @@ int main(int argc, char* argv[]) {
     lr.onPostInit([] {
         auto parent = new QWidget;
         parent->setObjectName("parent");
-        parent->setStyleSheet(qss_target("#parent", bg(Styles::BLACK->rgbHex)));
+        parent->setStyleSheet(qss_target("#parent", bg(Styles::GRAY_0->rgbHex)));
         auto layout = new QVBoxLayout(parent);
         parent->setLayout(layout);
 

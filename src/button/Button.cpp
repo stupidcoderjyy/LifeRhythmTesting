@@ -58,8 +58,8 @@ void Button::setButtonEnabled(bool e) {
             }
         } else {
             auto p = palette();
-            p.setColor(QPalette::WindowText, Styles::GRAY_TEXT_0->color);
-            p.setColor(QPalette::Text, Styles::GRAY_TEXT_0->color);
+            p.setColor(QPalette::WindowText, Styles::GRAY_TEXT_1->color);
+            p.setColor(QPalette::Text, Styles::GRAY_TEXT_1->color);
             setPalette(p);
         }
     } else {
