@@ -10,6 +10,8 @@
 #include "ScrollArea.h"
 #include <QTimer>
 
+class WidgetFactory;
+
 class ListItem : public Widget {
     Q_OBJECT
     friend class ListWidget;
@@ -44,11 +46,12 @@ protected:
     int maxGlobalPos;
     int posMid, posBottom;
     int idxA, idxB;
+    WidgetFactory* factoryItem;
 public:
     explicit ListWidget(QWidget* parent = nullptr, bool iic = true);
     void setRowHeight(int s);
     void setMinAreaRowCount(int count);
-    void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
+    void onPostParsing(Handlers &handlers, NBT *nbt) override;
     void setData(WidgetData* d) override;
 protected:
     virtual ListItem* newItem();

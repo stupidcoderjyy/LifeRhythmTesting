@@ -27,16 +27,13 @@ int main(int argc, char* argv[]) {
         regClazz(f, ArrowButton);
         regClazz(f, Button);
         regClazz(f, ButtonSwitchView);
-        f = WidgetFactoryStorage::get("test:calendar/item_range");
-        regClazz(f, Widget);
-        regClazz(f, calendar::ItemRange);
-        regClazz(f, Label);
         f = WidgetFactoryStorage::get("test:calendar/dropdown_range");
         regClazz(f, Widget);
         regClazz(f, calendar::DropDownRange);
         regClazz(f, Label);
         regClazz(f, ArrowButton);
-        regClazz(f, calendar::ListRange);
+        regClazz(f, ListWidget);
+        regClazz(f, calendar::ItemRange);
         f = WidgetFactoryStorage::get("test:calendar/dropdown_mini_calendar");
         regClazz(f, Widget);
         regClazz(f, calendar::MiniCalendarDropDown);

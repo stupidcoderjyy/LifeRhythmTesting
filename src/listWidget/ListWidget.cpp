@@ -8,6 +8,7 @@
 #include "NBT.h"
 #include <QDrag>
 #include <QMimeData>
+#include <WidgetFactory.h>
 
 ListItem::ListItem(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor), listData(), selected(), dataIdx() {
 }
@@ -27,10 +28,11 @@ void ListItem::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 ListWidget::ListWidget(QWidget *parent, bool initInConstructor): ScrollArea(parent, initInConstructor),
-        container(new QWidget(this)),
-        dragScrollStep(), rowHeight(40), areaRowCount(0), pos(0),
-        globalPos(), maxGlobalPos(), posMid(), posBottom(), idxA(-1), idxB(-1) {
+        container(new QWidget(this)), dragScrollStep(),
+        rowHeight(40), areaRowCount(0), pos(0), globalPos(),
+        maxGlobalPos(), posMid(), posBottom(), idxA(-1), idxB(-1), factoryItem() {
     setWidget(container);
+    prepared = true;
 }
 
 void ListWidget::setRowHeight(int s) {
@@ -41,24 +43,42 @@ void ListWidget::setMinAreaRowCount(int count) {
     areaRowCount = count;
 }
 
-void ListWidget::onPostParsing(Handlers &handlers, NBT *widgetTag) {
-    if (!widgetTag->contains("row_height", Data::INT)) {
-        return;
+void ListWidget::onPostParsing(Handlers &handlers, NBT *nbt) {
+    if (nbt->contains("row_height", Data::INT)) {
+        int height = nbt->getInt("row_height");
+        handlers << [height](QWidget *target) {
+            auto *list = static_cast<ListWidget *>(target);
+            list->setRowHeight(height);
+        };
     }
-    int height = widgetTag->getInt("row_height");
-    handlers << [height](QWidget* target) {
-        auto* list = static_cast<ListWidget*>(target);
-        list->setRowHeight(height);
-    };
+    if (nbt->contains("item", Data::COMPOUND)) {
+        auto* f = WidgetFactory::fromNbt("item", nbt->get("item")->asCompound());
+        f->include(WidgetFactory::factoryInParse());
+        try {
+            f->parse();
+        } catch (Error&) {
+            delete f;
+            throw;
+        }
+        handlers << [f](QWidget* widget) {
+            auto* l = static_cast<ListWidget*>(widget);
+            l->factoryItem = f;
+        };
+    }
 }
 
 void ListWidget::setData(WidgetData *d) {
-    if (dynamic_cast<ListData*>(d)) {
-        ScrollArea::setData(d);
+    auto* ld = dynamic_cast<ListData*>(d);
+    if (d && !ld) {
+        throw Error("[ListWidget::setData] requires ListData");
     }
+    ScrollArea::setData(d);
 }
 
 ListItem *ListWidget::newItem() {
+    if (factoryItem) {
+        return factoryItem->applyAndCast<ListItem>();
+    }
     return new ListItem();
 }
 
@@ -213,7 +233,6 @@ void ListWidget::updateBase() {
         }
     }
     setGlobalPos(globalPos, true);
-    prepared = true;
 }
 
 void ListWidget::fillA(int begin, bool forceUpdate) {

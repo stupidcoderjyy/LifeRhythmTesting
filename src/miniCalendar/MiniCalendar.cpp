@@ -33,6 +33,8 @@ void MiniCalendar::loadDate(const QDate &date) {
             break;
         }
         case Year: {
+            dateTopLeft = date;
+            break;
         }
     }
     syncWidget();
@@ -133,6 +135,9 @@ void MiniCalendar::syncWidget() {
 #define HEIGHT 8 * SLOT_SIZE_1
 
 void MiniCalendar::initWidget() {
+    if (prepared) {
+        return;
+    }
     setFixedSize(WIDTH, HEIGHT);    //252x288
     WidgetFactoryStorage::get("test:widget_mini_calendar")->apply(nullptr, this);
     prev = getPointer<ArrowButton>("prev");

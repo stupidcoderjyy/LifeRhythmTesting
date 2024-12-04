@@ -20,15 +20,20 @@ void CalendarData::set(ViewType vt, QDate ds) {
     emit sigDataChanged();
 }
 
-Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic), dropDownMc(), miniCalendar(),
-                                               labelRange(), labelDate() {
+Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic), dropdownMiniCalendar(), dropdownRange(),
+        btnPrev(), btnNext(), btnWeek(), btnMonth(), miniCalendar(), labelRange(), labelDate() {
 }
 
 void Calendar::setData(WidgetData *d) {
-    if (dynamic_cast<CalendarData*>(d) && !wData) {
-        Widget::setData(d);
-        initWidget();
+    auto cd = dynamic_cast<CalendarData*>(d);
+    if (!cd) {
+        throw Error("[Calendar::setData] requires CalendarData");
     }
+    if (prepared) {
+        miniCalendar->setData(cd);
+        dropdownRange->setData(cd);
+    }
+    Widget::setData(d);
 }
 
 void Calendar::syncDataToWidget() {
@@ -62,88 +67,80 @@ void Calendar::syncDataToWidget() {
         }
         labelDate->setText(s);
         labelDate->setSizeToText();
+        bool isMonth = cd->getViewType() == calendar::Month;
+        dropdownRange->setVisible(!isMonth);
+        btnWeek->setSelected(!isMonth);
+        btnMonth->setSelected(isMonth);
     }
 }
 
 void Calendar::connectModelView() {
-    dc << connect(wData, &WidgetData::sigDataChanged, this, &Calendar::syncDataToWidget);
+    auto* cd = wData->cast<CalendarData>();
+    dc << connect(cd, &WidgetData::sigDataChanged, this, &Calendar::syncDataToWidget);
+    dc << connect(miniCalendar, &MiniCalendar::sigRelease, this, [this, cd] {
+        switch (miniCalendar->getViewLevel()) {
+            case mini_calendar::Day: {
+                miniCalendar->syncWidgetToData();
+                emit dropdownMiniCalendar->sigCloseMenu();
+                break;
+            }
+            case mini_calendar::Month: {
+                if (cd->getViewType() == calendar::Month) {
+                    miniCalendar->syncWidgetToData();
+                    emit dropdownMiniCalendar->sigCloseMenu();
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    });
+    dc << connect(dropdownMiniCalendar, &DropDown::sigMenuOpening, this, [this, cd] {
+        if (cd->getViewType() == calendar::Month) {
+            miniCalendar->setViewLevel(mini_calendar::Month);
+        } else {
+            miniCalendar->setViewLevel(mini_calendar::Day);
+        }
+        miniCalendar->loadDate(cd->getDateStart());
+    });
+    dc << connect(btnPrev, &Button::sigSelected, this, [cd] {
+        if (cd->getViewType() == calendar::Month) {
+            cd->set(cd->getViewType(), cd->getDateStart().addMonths(-1));
+        } else {
+            cd->set(cd->getViewType(), cd->getDateStart().addDays(-cd->getViewType()));
+        }
+    });
+    dc << connect(btnNext, &Button::sigSelected, this, [cd] {
+        if (cd->getViewType() == calendar::Month) {
+            cd->set(cd->getViewType(), cd->getDateStart().addMonths(1));
+        } else {
+            cd->set(cd->getViewType(), cd->getDateStart().addDays(cd->getViewType()));
+        }
+    });
+    dc << connect(btnWeek, &Button::sigSelected, this, [cd](bool s) {
+        if (s) {
+            cd->set(cd->getPrevType(), cd->getDateStart());
+        }
+    });
+    dc << connect(btnMonth, &Button::sigSelected, this, [cd](bool s) {
+        if (s) {
+            cd->set(calendar::Month, cd->getDateStart());
+        }
+    });
 }
 
 void Calendar::initWidget() {
-    if (wData && !prepared) {
-        auto cd = wData->cast<CalendarData>();
-        dropDownMc = getPointer<DropDown>("dropdown_mini_calendar");
-        labelDate = dropDownMc->getPointer<Label>("l");
-        miniCalendar = dropDownMc->getPointer<calendar::MiniCalendarDropDown>("c");
-        miniCalendar->setData(cd);
-        connect(miniCalendar, &MiniCalendar::sigRelease, this, [this, cd] {
-            switch (miniCalendar->getViewLevel()) {
-                case mini_calendar::Day: {
-                    miniCalendar->syncWidgetToData();
-                    emit dropDownMc->sigCloseMenu();
-                    break;
-                }
-                case mini_calendar::Month: {
-                    if (cd->getViewType() == calendar::Month) {
-                        miniCalendar->syncWidgetToData();
-                        emit dropDownMc->sigCloseMenu();
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        });
-        connect(dropDownMc, &DropDown::sigMenuOpening, this, [this, cd] {
-            if (cd->getViewType() == calendar::Month) {
-                miniCalendar->setViewLevel(mini_calendar::Month);
-            } else {
-                miniCalendar->setViewLevel(mini_calendar::Day);
-            }
-            miniCalendar->loadDate(cd->getDateStart());
-        });
-
-        auto dp = getPointer<calendar::DropDownRange>("dropdown_range");
-        dp->setData(cd);
-        labelRange = dp->getPointer<Label>("l");
-
-        auto btnPrev = getPointer<Button>("btnPrev");
-        connect(btnPrev, &Button::sigSelected, this, [cd] {
-            if (cd->getViewType() == calendar::Month) {
-                cd->set(cd->getViewType(),cd->getDateStart().addMonths(-1));
-            } else {
-                cd->set(cd->getViewType(), cd->getDateStart().addDays(-cd->getViewType()));
-            }
-        });
-
-        auto btnNext = getPointer<Button>("btnNext");
-        connect(btnNext, &Button::sigSelected, this, [cd] {
-            if (cd->getViewType() == calendar::Month) {
-                cd->set(cd->getViewType(), cd->getDateStart().addMonths(1));
-            } else {
-                cd->set(cd->getViewType(), cd->getDateStart().addDays(cd->getViewType()));
-            }
-        });
-
-        auto btnWeek = getPointer<Button>("btnWeek");
-        auto btnMonth = getPointer<Button>("btnMonth");
+    if (!prepared) {
+        dropdownMiniCalendar = getPointer<DropDown>("dropdown_mini_calendar");
+        labelDate = dropdownMiniCalendar->getPointer<Label>("l");
+        miniCalendar = dropdownMiniCalendar->getPointer<calendar::MiniCalendarDropDown>("c");
+        dropdownRange = getPointer<calendar::DropDownRange>("dropdown_range");
+        labelRange = dropdownRange->getPointer<Label>("l");
+        btnPrev = getPointer<Button>("btnPrev");
+        btnNext = getPointer<Button>("btnNext");
+        btnWeek = getPointer<Button>("btnWeek");
+        btnMonth = getPointer<Button>("btnMonth");
         btnWeek->setSelected(true);
-        connect(btnWeek, &Button::sigSelected, this, [cd, dp, btnMonth](bool s) {
-            if (s) {
-                cd->set(cd->getPrevType(), cd->getDateStart());
-                dp->setVisible(true);
-                btnMonth->setSelected(false);
-            }
-        });
-        connect(btnMonth, &Button::sigSelected, this, [cd, dp, btnWeek](bool s) {
-            if (s) {
-                cd->set(calendar::Month, cd->getDateStart());
-                dp->setVisible(false);
-                btnWeek->setSelected(false);
-            }
-        });
-
-        syncDataToWidget();
         prepared = true;
     }
 }
@@ -334,7 +331,10 @@ ItemRange::ItemRange(QWidget *parent, bool iic): ListItem(parent, iic), label() 
 }
 
 void ItemRange::initWidget() {
-    label = getPointer<Label>("l");
+    if (!prepared) {
+        label = getPointer<Label>("l");
+        prepared = true;
+    }
 }
 
 void ItemRange::syncDataToWidget() {
@@ -351,14 +351,7 @@ void ItemRange::leaveEvent(QEvent *event) {
     setState(0);
 }
 
-ListRange::ListRange(QWidget *parent, bool iic): ListWidget(parent, iic) {
-}
-
-ListItem * ListRange::newItem() {
-    return WidgetFactoryStorage::get("test:calendar/item_range")->applyAndCast<ItemRange>();
-}
-
-DropDownRange::DropDownRange(QWidget *parent, bool iic): DropDown(parent, iic), label(), list(), viewType() {
+DropDownRange::DropDownRange(QWidget *parent, bool iic): DropDown(parent, iic), label(), list(), viewType(), optionsData(new ListData) {
 }
 
 void DropDownRange::syncWidgetToData() {
@@ -370,20 +363,23 @@ void DropDownRange::syncWidgetToData() {
 void DropDownRange::initWidget() {
     DropDown::initWidget();
     label = getPointer<Label>("l");
-    list = getPointer<ListRange>("list");
-    auto cd = new ListData;
+    list = getPointer<ListWidget>("list");
     for (int t = 1; t <= 7; t++) {
-        cd->append(new DataRange(t));
+        optionsData->append(new DataRange(t));
     }
     list->setRowHeight(29);
     list->setFixedHeight(29 * 7);
-    list->setData(cd);
-    connect(cd, &ListData::sigDataSelected, this, [this, cd](int, int cur) {
+    list->setData(optionsData);
+    connect(optionsData, &ListData::sigDataSelected, this, [this](int, int cur) {
         viewType = static_cast<ViewType>(cur + 1);
-        cd->selectData(-1);
+        optionsData->selectData(-1);
         syncWidgetToData();
-        emit menu->sigSelectOption();
+        emit sigCloseMenu();
     });
+}
+
+DropDownRange::~DropDownRange() {
+    delete optionsData;
 }
 
 ButtonSwitchView::ButtonSwitchView(QWidget *parent, bool iic): Button(parent, iic) {

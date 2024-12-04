@@ -52,7 +52,12 @@ inline QDate CalendarData::getDateStart() const {
 
 class Calendar : public Widget {
 private:
-    DropDown* dropDownMc;
+    DropDown* dropdownMiniCalendar;
+    DropDown* dropdownRange;
+    Button* btnPrev;
+    Button* btnNext;
+    Button* btnWeek;
+    Button* btnMonth;
     calendar::MiniCalendarDropDown* miniCalendar;
     Label* labelRange;
     Label* labelDate;
@@ -137,22 +142,17 @@ public:
     void leaveEvent(QEvent *event) override;
 };
 
-class ListRange : public ListWidget {
-    Q_OBJECT
-public:
-    explicit ListRange(QWidget* parent = nullptr, bool iic = true);
-    ListItem *newItem() override;
-};
-
 class DropDownRange : public DropDown {
 private:
     Label* label;
-    ListRange* list;
+    ListWidget* list;
     ViewType viewType;
+    ListData* optionsData;
 public:
     explicit DropDownRange(QWidget* parent = nullptr, bool iic = true);
     void syncWidgetToData() override;
     void initWidget() override;
+    ~DropDownRange() override;
 };
 
 class ButtonSwitchView : public Button {
