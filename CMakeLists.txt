@@ -12,7 +12,7 @@ set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testCalendar.cpp)
+set(TEST_ENTRYPOINT testSlotsWidget.cpp)
 
 set(INCLUDES
         src/button
@@ -27,7 +27,7 @@ set(INCLUDES
         src/menu
         src/miniCalendar
         src/slotsPainter
-#        src/slotsWidget
+        src/slotsWidget
         src/tiledListWidget
 #        src/xyplot
 )
@@ -59,8 +59,8 @@ set(SRC_FILES
         src/slotsPainter/SlotsPainter.h
         src/tiledListWidget/TiledListWidget.h
         src/tiledListWidget/TiledListWidget.cpp
-#        src/slotsWidget/SlotsWidget.cpp
-#        src/slotsWidget/SlotsWidget.h
+        src/slotsWidget/SlotsWidget.cpp
+        src/slotsWidget/SlotsWidget.h
 )
 
 #把LR自带的资源

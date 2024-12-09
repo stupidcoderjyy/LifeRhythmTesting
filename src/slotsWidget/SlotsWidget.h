@@ -19,10 +19,11 @@ protected:
     QVector<ListItem*> items;
     int slotWidth, slotHeight;
     int columns, rows;
-    bool running;
     SlotSizePolicy vSlotSizePolicy, hSlotSizePolicy;
+    WidgetFactory *factoryItem;
 public:
     explicit SlotsWidget(QWidget *parent = nullptr);
+    void setData(WidgetData *d) override;
     inline void setSlotSize(int width, int height);
     inline void setSlotCount(int columns, int rows);
     inline void setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical);
@@ -33,6 +34,7 @@ protected:
     virtual ListItem* newItem();
     void resizeEvent(QResizeEvent* event) override;
     void connectModelView() override;
+    void onPostParsing(Handlers &handlers, NBT *nbt) override;
 private:
     void updateBase();
 };

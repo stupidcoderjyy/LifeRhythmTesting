@@ -32,6 +32,7 @@ public:
         } else {
             d = -1;
         }
+        update();
     }
 
     void paintEvent(QPaintEvent *event) override {
@@ -58,9 +59,11 @@ int main(int argc, char* argv[]) {
     cfg.setMode(Config::Test);
     lr.setConfig(cfg);
     lr.onPostInit([] {
-        auto d = new ListData;
+        auto d1 = new ListData;
+        auto d2 = new ListData;
         for (int i = 0; i < 12; i++) {
-            d->append(new TestData(i));
+            d1->append(new TestData(i));
+            d2->append(new TestData(-i));
         }
 
         auto parent = new QWidget;
@@ -68,11 +71,27 @@ int main(int argc, char* argv[]) {
         parent->setLayout(layout);
 
         auto sw = new Slots(parent);
-        sw->setColumns(5);
-        sw->setRows(3);
+        sw->setSlotCount(5, 3);
         sw->setMinimumSize(200, 200);
         sw->setSizePolicy(QSizePolicy:: Minimum, QSizePolicy::Minimum);
-        sw->setData(d);
+        sw->setData(d1);
+
+        QTimer::singleShot(1000, [sw, d2] {
+            sw->setData(d2);
+        });
+
+        QTimer::singleShot(2000, [sw, d2] {
+            d2->beginEdit();
+            d2->remove(0);
+            d2->endEdit();
+        });
+
+        QTimer::singleShot(3000, [sw, d2] {
+            d2->beginEdit();
+            d2->append(new TestData(99));
+            d2->endEdit();
+        });
+
         layout->addWidget(sw);
         parent->show();
     });

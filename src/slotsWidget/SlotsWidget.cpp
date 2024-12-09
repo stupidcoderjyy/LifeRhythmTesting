@@ -3,29 +3,41 @@
 //
 
 #include "SlotsWidget.h"
+#include "NBT.h"
+#include "WidgetFactory.h"
 
-SlotsWidget::SlotsWidget(QWidget *parent): Widget(parent), slotWidth(50), slotHeight(50), columns(0), rows(0), running(),
-        vSlotSizePolicy(Auto), hSlotSizePolicy(Auto){
+SlotsWidget::SlotsWidget(QWidget *parent): Widget(parent), slotWidth(50), slotHeight(50), columns(0), rows(0),
+        vSlotSizePolicy(Auto), hSlotSizePolicy(Auto), factoryItem() {
+}
+
+void SlotsWidget::setData(WidgetData *d) {
+    if (!prepared) {
+        updateBase();
+    }
+    Widget::setData(d);
+    syncItems(0, INT32_MAX);    //update all
 }
 
 void SlotsWidget::prepareItem(ListItem *w) {
-    w->setList(wData->cast<ListData>());
     w->setParent(this);
     w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    w->initWidget();
     w->show();
     items << w;
 }
 
 void SlotsWidget::syncItem(int idx) const {
     auto item = items[idx];
-    auto d = wData->cast<ListData>()->at(idx);
+    auto ld = wData->cast<ListData>();
+    auto d = ld->at(idx);
     item->setData(d);
     item->dataIdx = idx;
+    item->setList(ld);
     item->syncDataToWidget();
 }
 
 void SlotsWidget::syncItems(int begin, int end) const {
-    int rBorder = qMin(rows * columns, wData->cast<ListData>()->length());
+    int rBorder = rows * columns;
     if (end < 0 || begin >= rBorder) {
         return;
     }
@@ -37,35 +49,46 @@ void SlotsWidget::syncItems(int begin, int end) const {
 }
 
 ListItem * SlotsWidget::newItem() {
+    if (factoryItem) {
+        return factoryItem->applyAndCast<ListItem>();
+    }
     return new ListItem();
 }
 
 void SlotsWidget::resizeEvent(QResizeEvent *event) {
     Widget::resizeEvent(event);
-    if (wData) {
-        running = true;
-    }
     updateBase();
 }
 
 void SlotsWidget::connectModelView() {
     dc << connect(wData, &WidgetData::sigDataChanged, this, [this] {
-        if (wData) {
-            if (!running) {
-                running = true;
-                updateBase();
-            }
-            auto* d = wData->cast<ListData>();
-            syncItems(d->getChangeBegin(), d->getChangeEnd());
+        if (!prepared) {
+            updateBase();
         }
+        auto* d = wData->cast<ListData>();
+        syncItems(d->getChangeBegin(), d->getChangeEnd());
     });
 }
 
-void SlotsWidget::updateBase() {
-    if (!running || !wData) {
-        running = false;
-        return;
+void SlotsWidget::onPostParsing(Handlers &handlers, NBT *nbt) {
+    if (nbt->contains("item", Data::COMPOUND)) {
+        auto *f = WidgetFactory::fromNbt("item", nbt->get("item")->asCompound());
+        f->include(WidgetFactory::factoryInParse());
+        try {
+            f->parse();
+        } catch (Error &) {
+            delete f;
+            throw;
+        }
+        handlers << [f](QWidget *widget) {
+            auto *l = static_cast<SlotsWidget*>(widget);
+            l->factoryItem = f;
+        };
     }
+}
+
+void SlotsWidget::updateBase() {
+    prepared = true;
     int oldSlotHeight = slotHeight, oldSlotWidth = slotWidth;
     if (vSlotSizePolicy == Auto) {
         slotHeight = height() / rows;
@@ -96,5 +119,4 @@ void SlotsWidget::updateBase() {
         delete items[i++];
     }
     items.remove(rb, rn);
-    syncItems(0, totalItems);
 }
