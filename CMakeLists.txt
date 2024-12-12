@@ -12,55 +12,63 @@ set(LR_PROJECT_INCLUDES "${LR_PROJECT_PATH}/include")
 set(LR_CORE_DLL_DEBUG "${LR_PROJECT_PATH}/cmake-build-makedll-debug")
 set(LR_CORE_DLL_RELEASE "${LR_PROJECT_PATH}/cmake-build-makedll-release")
 
-set(TEST_ENTRYPOINT testSlotsWidget.cpp)
+set(TEST_ENTRYPOINT widgets/testCalendar.cpp)
 
 set(INCLUDES
-        src/button
-        src/arrowButton
-        src/calendar
-        src/dropDown
-        src/focusContainer
+        widgets/button
+        widgets/arrowButton
+        widgets/calendar
+        widgets/dropDown
+        widgets/focusContainer
 #        src/input_text_label
 #        src/jbTextButton
-        src/label
-        src/listWidget
-        src/menu
-        src/miniCalendar
-        src/slotsPainter
-        src/slotsWidget
-        src/tiledListWidget
+        widgets/label
+        widgets/listWidget
+        widgets/menu
+        widgets/miniCalendar
+        widgets/slotsPainter
+        widgets/slotsWidget
+        widgets/tiledListWidget
 #        src/xyplot
+
+        util/async
+        util/models
 )
 
 set(SRC_FILES
-        src/arrowButton/ArrowButton.cpp
-        src/arrowButton/ArrowButton.h
-        src/button/Button.cpp
-        src/button/Button.h
-        src/calendar/Calendar.cpp
-        src/calendar/Calendar.h
-        src/dropDown/DropDown.h
-        src/dropDown/DropDown.cpp
-        src/focusContainer/FocusContainer.h
-        src/focusContainer/FocusContainer.cpp
+        widgets/arrowButton/ArrowButton.cpp
+        widgets/arrowButton/ArrowButton.h
+        widgets/button/Button.cpp
+        widgets/button/Button.h
+        widgets/calendar/Calendar.cpp
+        widgets/calendar/Calendar.h
+        widgets/dropDown/DropDown.h
+        widgets/dropDown/DropDown.cpp
+        widgets/focusContainer/FocusContainer.h
+        widgets/focusContainer/FocusContainer.cpp
 #        src/input_text_label/InputTextLabel.cpp
 #        src/input_text_label/InputTextLabel.h
 #        src/jbTextButton/JbTextButton.cpp
 #        src/jbTextButton/JbTextButton.h
-        src/label/Label.h
-        src/label/Label.cpp
-        src/listWidget/ListWidget.h
-        src/listWidget/ListWidget.cpp
-        src/menu/Menu.h
-        src/menu/Menu.cpp
-        src/miniCalendar/MiniCalendar.cpp
-        src/miniCalendar/MiniCalendar.h
-        src/slotsPainter/SlotsPainter.cpp
-        src/slotsPainter/SlotsPainter.h
-        src/tiledListWidget/TiledListWidget.h
-        src/tiledListWidget/TiledListWidget.cpp
-        src/slotsWidget/SlotsWidget.cpp
-        src/slotsWidget/SlotsWidget.h
+        widgets/label/Label.h
+        widgets/label/Label.cpp
+        widgets/listWidget/ListWidget.h
+        widgets/listWidget/ListWidget.cpp
+        widgets/menu/Menu.h
+        widgets/menu/Menu.cpp
+        widgets/miniCalendar/MiniCalendar.cpp
+        widgets/miniCalendar/MiniCalendar.h
+        widgets/slotsPainter/SlotsPainter.cpp
+        widgets/slotsPainter/SlotsPainter.h
+        widgets/tiledListWidget/TiledListWidget.h
+        widgets/tiledListWidget/TiledListWidget.cpp
+        widgets/slotsWidget/SlotsWidget.cpp
+        widgets/slotsWidget/SlotsWidget.h
+
+        util/async/AsyncTask.h
+        util/async/AsyncTask.cpp
+        util/models/ListData.h
+        util/models/ListData.cpp
 )
 
 #把LR自带的资源

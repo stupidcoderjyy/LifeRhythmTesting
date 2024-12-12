@@ -53,6 +53,7 @@ public:
     void setMinAreaRowCount(int count);
     void onPostParsing(Handlers &handlers, NBT *nbt) override;
     void setData(WidgetData* d) override;
+    ~ListWidget() override;
 protected:
     virtual ListItem* newItem();
     virtual void prepareItem(ListItem* item);

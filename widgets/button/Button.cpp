@@ -11,6 +11,7 @@
 #include "WidgetUtil.h"
 #include "QMouseEvent"
 #include <QDebug>
+#include <RcManagers.h>
 
 QString Button::QSS_NORMAL{};
 QString Button::QSS_HOVERED{};
@@ -20,7 +21,7 @@ QString Button::QSS_SELECTED_DISABLED{};
 
 Button::Button(QWidget *parent, bool initInConstructor): Label(parent, initInConstructor),
         running(), selected(), hasStyle(true), activatedOnPress(), hasImg(),
-        enabled(true), type(Click), hasFocus(true) {
+        hasFocus(true), type(Click) {
     setAlignment(Qt::AlignCenter);
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
@@ -40,46 +41,6 @@ void Button::setButtonImg(const QPixmap &p1, const QPixmap& p2) {
     setPixmap(p);
 }
 
-void Button::setButtonEnabled(bool e) {
-    if (enabled == e) {
-        return;
-    }
-    enabled = e;
-    if (!hasStyle) {
-        setStyleSheet(QSS_NORMAL);
-        return;
-    }
-    if (enabled) {
-        if (hasImg) {
-            setPixmap(imgNormal);
-            setFixedSize(imgNormal.size());
-            if (type == Select && selected) {
-                setStyleSheet(QSS_SELECTED);
-            }
-        } else {
-            auto p = palette();
-            p.setColor(QPalette::WindowText, Styles::GRAY_TEXT_1->color);
-            p.setColor(QPalette::Text, Styles::GRAY_TEXT_1->color);
-            setPalette(p);
-        }
-    } else {
-        if (type == Select && selected) {
-            setStyleSheet(QSS_SELECTED_DISABLED);
-        } else {
-            setStyleSheet(QSS_NORMAL);
-        }
-        if (hasImg) {
-            setPixmap(imgDisabled);
-            setFixedSize(imgDisabled.size());
-        } else {
-            auto p = palette();
-            p.setColor(QPalette::WindowText, Styles::GRAY_4->color);
-            p.setColor(QPalette::Text, Styles::GRAY_4->color);
-            setPalette(p);
-        }
-    }
-}
-
 void Button::setButtonStyleEnabled(bool e) {
     if (hasStyle != e) {
         hasStyle = e;
@@ -94,11 +55,7 @@ void Button::setSelected(bool s) {
         return;
     }
     selected = s;
-    emit sigSelected(s);
-    if (!hasStyle) {
-        return;
-    }
-    if (type == Select) {
+    if (hasStyle && type == Select) {
         if (s) {
             setStyleSheet(QSS_SELECTED);
         } else if (isMouseHovered(this)) {
@@ -107,10 +64,25 @@ void Button::setSelected(bool s) {
             setStyleSheet(QSS_NORMAL);
         }
     }
+    emit sigSelected(s);
 }
 
 void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
-    Label::onPostParsing(handlers, widgetTag);
+    WidgetFactory::parseTextWidget<QLabel>(handlers, widgetTag);
+    if (widgetTag->contains("img", Data::STRING)) {
+        auto loc = Identifier(widgetTag->getString("img"));
+        QPixmap img{};
+        if (ImageStorage::exists(loc)) {
+            img = *ImageStorage::get(loc);
+        }
+        if (!img.isNull() && widgetTag->contains("scale", Data::ARR)) {
+            QSize scale = WidgetFactory::parseSize(widgetTag->get("scale")->asArray());
+            img = img.scaled(scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        }
+        handlers << [img](QWidget *target) {
+            static_cast<Button*>(target)->setButtonImg(img);
+        };
+    }
     if (widgetTag->contains("mode", Data::STRING)) {
         Mode mode = Click;
         auto modeStr = widgetTag->getString("mode");
@@ -140,6 +112,47 @@ void Button::onPostParsing(Handlers &handlers, NBT *widgetTag) {
         handlers << [hasFocus](QWidget *w) {
             static_cast<Button*>(w)->setHasFocus(hasFocus);
         };
+    }
+}
+
+void Button::setWidgetEnabled(bool e) {
+    if (enabled == e) {
+        return;
+    }
+    enabled = e;
+    if (!hasStyle) {
+        setStyleSheet(QSS_NORMAL);
+        return;
+    }
+    if (enabled) {
+        if (hasImg) {
+            qDebug() << this << type << "enabled & hasImg";
+            setPixmap(imgNormal);
+            setFixedSize(imgNormal.size());
+            if (type == Select && selected) {
+                setStyleSheet(QSS_SELECTED);
+            }
+        } else {
+            auto p = palette();
+            p.setColor(QPalette::WindowText, Styles::GRAY_TEXT_1->color);
+            p.setColor(QPalette::Text, Styles::GRAY_TEXT_1->color);
+            setPalette(p);
+        }
+    } else {
+        if (type == Select && selected) {
+            setStyleSheet(QSS_SELECTED_DISABLED);
+        } else {
+            setStyleSheet(QSS_NORMAL);
+        }
+        if (hasImg) {
+            setPixmap(imgDisabled);
+            setFixedSize(imgDisabled.size());
+        } else {
+            auto p = palette();
+            p.setColor(QPalette::WindowText, Styles::GRAY_4->color);
+            p.setColor(QPalette::Text, Styles::GRAY_4->color);
+            setPalette(p);
+        }
     }
 }
 

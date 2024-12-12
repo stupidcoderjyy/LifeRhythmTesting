@@ -26,7 +26,6 @@ protected:
     bool hasStyle;
     bool activatedOnPress;
     bool hasImg;
-    bool enabled;
     bool hasFocus;
     Mode type;
     QPixmap imgNormal, imgDisabled;
@@ -34,10 +33,10 @@ public:
     explicit Button(QWidget* parent = nullptr, bool initInConstructor = true);
     void setButtonText(const QString& text);
     void setButtonImg(const QPixmap& p1, const QPixmap& p2 = {});
-    void setButtonEnabled(bool e = true);
     void setButtonStyleEnabled(bool enabled);
     virtual void setSelected(bool selected);
     void onPostParsing(Handlers &handlers, NBT *widgetTag) override;
+    void setWidgetEnabled(bool e = true) override;
     inline void setActivateOnPress(bool aop);
     inline void setButtonMode(Mode type);
     inline void setHasFocus(bool hasFocus);

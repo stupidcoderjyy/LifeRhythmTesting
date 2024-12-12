@@ -7,18 +7,15 @@
 #include "Error.h"
 #include "NBT.h"
 #include <QDrag>
-#include <QMimeData>
 #include <WidgetFactory.h>
 
 ListItem::ListItem(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor), listData(), selected(), dataIdx() {
 }
 
 void ListItem::syncDataToWidget() {
-    bool s = listData->selectedIdx == dataIdx;
-    if (selected == s) {
-        return;
+    if (listData) {
+        selected = listData->selectedIdx == dataIdx;
     }
-    selected = s;
 }
 
 void ListItem::mouseReleaseEvent(QMouseEvent *event) {
@@ -52,18 +49,17 @@ void ListWidget::onPostParsing(Handlers &handlers, NBT *nbt) {
         };
     }
     if (nbt->contains("item", Data::COMPOUND)) {
-        auto* f = WidgetFactory::fromNbt("item", nbt->get("item")->asCompound());
+        auto* f = WidgetFactory::fromNbt("item", nbt->get().take("item")->asCompound());
         f->include(WidgetFactory::factoryInParse());
-        try {
-            f->parse();
-        } catch (Error&) {
+        f->parse();
+        if (f->getState() == WidgetFactory::Broken) {
             delete f;
-            throw;
+        } else {
+            handlers << [f](QWidget *widget) {
+                auto *l = static_cast<ListWidget *>(widget);
+                l->factoryItem = f;
+            };
         }
-        handlers << [f](QWidget* widget) {
-            auto* l = static_cast<ListWidget*>(widget);
-            l->factoryItem = f;
-        };
     }
 }
 
@@ -73,6 +69,10 @@ void ListWidget::setData(WidgetData *d) {
         throw Error("[ListWidget::setData] requires ListData");
     }
     ScrollArea::setData(d);
+}
+
+ListWidget::~ListWidget() {
+    delete factoryItem;
 }
 
 ListItem *ListWidget::newItem() {

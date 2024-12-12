@@ -6,7 +6,7 @@
 #include "NBT.h"
 #include "WidgetFactory.h"
 
-SlotsWidget::SlotsWidget(QWidget *parent): Widget(parent), slotWidth(50), slotHeight(50), columns(0), rows(0),
+SlotsWidget::SlotsWidget(QWidget *parent, bool iic): Widget(parent, iic), slotWidth(50), slotHeight(50), columns(0), rows(0),
         vSlotSizePolicy(Auto), hSlotSizePolicy(Auto), factoryItem() {
 }
 
@@ -18,21 +18,40 @@ void SlotsWidget::setData(WidgetData *d) {
     syncItems(0, INT32_MAX);    //update all
 }
 
+void SlotsWidget::setItemFactory(WidgetFactory *factory) {
+    if (factoryItem == factory) {
+        return;
+    }
+    if (factoryItem) {
+        delete factoryItem;
+    }
+    factoryItem = factory;
+}
+
+SlotsWidget::~SlotsWidget() {
+    delete factoryItem;
+}
+
 void SlotsWidget::prepareItem(ListItem *w) {
     w->setParent(this);
     w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    w->initWidget();
+    w->initWidget();    //确保ListItem处于已加载的状态
     w->show();
     items << w;
 }
 
 void SlotsWidget::syncItem(int idx) const {
     auto item = items[idx];
-    auto ld = wData->cast<ListData>();
-    auto d = ld->at(idx);
-    item->setData(d);
-    item->dataIdx = idx;
-    item->setList(ld);
+    if (auto ld = wData->cast<ListData>()) {
+        auto d = ld->at(idx);
+        item->setData(d);
+        item->dataIdx = idx;
+        item->setList(ld);
+    } else {
+        item->setData(nullptr);
+        item->dataIdx = -1;
+        item->setList(nullptr);
+    }
     item->syncDataToWidget();
 }
 
@@ -82,7 +101,11 @@ void SlotsWidget::onPostParsing(Handlers &handlers, NBT *nbt) {
         }
         handlers << [f](QWidget *widget) {
             auto *l = static_cast<SlotsWidget*>(widget);
-            l->factoryItem = f;
+            if (l->factoryItem) {
+                delete f;
+            } else {
+                l->factoryItem = f;
+            }
         };
     }
 }

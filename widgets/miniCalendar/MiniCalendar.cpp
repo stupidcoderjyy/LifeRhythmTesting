@@ -160,12 +160,10 @@ void MiniCalendar::initWidget() {
     painterWeekdayTitle->setSlotCount(7, 1);
     painterWeekdayTitle->addLayer(layerTitle);
 
-    background = new sp_layers::BackgroundLayer(Styles::BLACK->color);
-
     auto* painterDay = new SlotsPainter(this);
     painterDay->setFixedSize(WIDTH, SLOT_SIZE_1 * 6);
     painterDay->setSlotCount(7, 6);
-    painterDay->addLayer(background);
+    painterDay->addLayer(new sp_layers::BackgroundLayer(Styles::BLACK->color));
     painterDay->addLayer(layerContent);
     connect(painterDay, &SlotsPainter::sigScroll, this, [this](int dy){
         handlePainterScroll(dy < 0);
@@ -180,7 +178,7 @@ void MiniCalendar::initWidget() {
     auto *painterMonth = new SlotsPainter(this);
     painterMonth->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
     painterMonth->setSlotCount(4, 4);
-    painterMonth->addLayer(background);
+    painterMonth->addLayer(new sp_layers::BackgroundLayer(Styles::BLACK->color));
     painterMonth->close();
     connect(painterMonth, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
         auto d = dateTopLeft.addMonths((r << 2) + c);
@@ -202,7 +200,7 @@ void MiniCalendar::initWidget() {
     painterYear->setFixedSize(WIDTH, SLOT_SIZE_2 * 4);
     painterYear->setSlotCount(4, 4);
     painterYear->close();
-    painterYear->addLayer(background);
+    painterYear->addLayer(new sp_layers::BackgroundLayer(Styles::BLACK->color));
     connect(painterYear, &SlotsPainter::sigReleaseSlot, this, [this](int c, int r) {
         auto d = dateTopLeft.addYears((r << 2) + c);
         emit sigRelease(d);
@@ -242,7 +240,7 @@ void MiniCalendar::internalSwitchLevel(ViewLevel levelNew) {
         return;
     }
     title->setButtonStyleEnabled(levelNew != Year);
-    title->setButtonEnabled(levelNew != Year);
+    title->setWidgetEnabled(levelNew != Year);
     if (viewLevel == Day) {
         bottom->removeWidget(painterWeekdayTitle);
         painterWeekdayTitle->close();

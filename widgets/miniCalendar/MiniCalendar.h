@@ -38,7 +38,6 @@ protected:
     ArrowButton* next;
     Button* title;
     ContentLayer* layerContent;
-    SlotsPainterLayer* background;
     SlotsPainter* painterWeekdayTitle;
     SlotsPainter* painters[3];
     TitleLayer *layerTitle;

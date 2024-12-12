@@ -76,6 +76,9 @@ DropDown::~DropDown() {
 }
 
 void DropDown::mousePressEvent(QMouseEvent *event) {
+    if (!enabled) {
+        return;
+    }
     FocusContainer::mousePressEvent(event);
     if (!menuOpen && !pressLock) {
         FocusManager::mark(this);
@@ -108,12 +111,18 @@ void DropDown::focusOutEvent(QFocusEvent *event) {
 }
 
 void DropDown::enterEvent(QEvent *event) {
+    if (!enabled) {
+        return;
+    }
     if (!menuOpen && style == Button) {
         setStyleSheet(Button::QSS_HOVERED);
     }
 }
 
 void DropDown::leaveEvent(QEvent *event) {
+    if (!enabled) {
+        return;
+    }
     if (!menuOpen && style == Button) {
         setStyleSheet(Button::QSS_NORMAL);
     }

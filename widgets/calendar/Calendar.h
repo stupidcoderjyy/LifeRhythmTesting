@@ -7,13 +7,14 @@
 #include <ListData.h>
 #include <ListWidget.h>
 #include <Namespaces.h>
+#include <RcManagers.h>
 #include <WidgetData.h>
 
 #include "DropDown.h"
 #include "MiniCalendar.h"
+#include "SlotsWidget.h"
 
 BEGIN_NAMESPACE(lr)
-
 BEGIN_NAMESPACE(calendar)
 
 enum ViewType {
@@ -21,10 +22,15 @@ enum ViewType {
 };
 
 class MiniCalendarDropDown;
+class SlotsWidgetCalendar;
+class ListDataCalendar;
 
 END_NAMESPACE
 
+class ListItemCalendar;
+
 class CalendarData : public WidgetData {
+    friend class Calendar;
     using ViewType = calendar::ViewType;
 private:
     ViewType viewType;
@@ -36,6 +42,11 @@ public:
     inline ViewType getViewType() const;
     inline ViewType getPrevType() const;
     inline QDate getDateStart() const;
+protected:
+    virtual WidgetData* getData(const QDate& date) const;
+private:
+    void setTopLeft(calendar::ListDataCalendar* ldc) const;
+    void gatherData(calendar::ListDataCalendar* ldc) const;
 };
 
 inline CalendarData::ViewType CalendarData::getViewType() const {
@@ -61,13 +72,35 @@ private:
     calendar::MiniCalendarDropDown* miniCalendar;
     Label* labelRange;
     Label* labelDate;
+    calendar::SlotsWidgetCalendar* slotsContent;
+    std::function<ListItemCalendar*()> itemBuilder;
 public:
+    static void mainInit();
     explicit Calendar(QWidget* parent = nullptr, bool iic = true);
     void setData(WidgetData *d) override;
+    void setItemBuilder(const Identifier& factoryLoc);
+    void setItemBuilder(const std::function<ListItemCalendar*()>& itemBuilder);
     void syncDataToWidget() override;
     void connectModelView() override;
-protected:
     void initWidget() override;
+private:
+    void refreshContent(CalendarData* cd) const;
+    void setOperationEnabled(bool e) const;
+};
+
+class ListItemCalendar : public ListItem {
+    friend class calendar::SlotsWidgetCalendar;
+private:
+    calendar::SlotsWidgetCalendar* sw;
+    int itemIdx;
+    QColor iconColor;
+    QFont iconFont;
+    int iconNum;
+public:
+    explicit ListItemCalendar(QWidget* parent = nullptr, bool iic = true);
+protected:
+    void syncDataToWidget() override;
+    void paintEvent(QPaintEvent *event) override;
 };
 
 BEGIN_NAMESPACE(calendar)
@@ -160,6 +193,31 @@ public:
     explicit ButtonSwitchView(QWidget* parent = nullptr, bool iic = true);
 protected:
     void handleButtonActivate(QMouseEvent *ev) override;
+};
+
+class SlotsWidgetCalendar : public SlotsWidget {
+    friend class lr::ListItemCalendar;
+    friend class lr::Calendar;
+private:
+    std::function<ListItemCalendar*()> itemBuilder;
+    CalendarData *cd;
+public:
+    explicit SlotsWidgetCalendar(QWidget *parent = nullptr, bool iic = true);
+    ~SlotsWidgetCalendar() override;
+    inline void setItemBuilder(std::function<ListItemCalendar*()> itemBuilder);
+protected:
+    ListItem *newItem() override;
+    void paintEvent(QPaintEvent *event) override;
+};
+
+inline void SlotsWidgetCalendar::setItemBuilder(std::function<ListItemCalendar*()> ib) {
+    itemBuilder = std::move(ib);
+}
+
+class ListDataCalendar : public ListData {
+public:
+    QDate topLeft;
+    ViewType viewType;
 };
 
 END_NAMESPACE

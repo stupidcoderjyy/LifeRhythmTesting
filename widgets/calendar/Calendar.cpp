@@ -3,7 +3,7 @@
 //
 
 #include "Calendar.h"
-
+#include "AsyncTask.h"
 #include <RcManagers.h>
 
 USING_NAMESPACE(lr)
@@ -20,20 +20,75 @@ void CalendarData::set(ViewType vt, QDate ds) {
     emit sigDataChanged();
 }
 
+WidgetData * CalendarData::getData(const QDate &date) const {
+    return nullptr;
+}
+
+void CalendarData::setTopLeft(calendar::ListDataCalendar *ldc) const {
+    if (viewType == calendar::Month) {
+        QDate d = dateStart;
+        d.setDate(d.year(), d.month(), 1);
+        ldc->topLeft = d.addDays(1 - d.dayOfWeek());
+    } else {
+        ldc->topLeft = dateStart;
+    }
+}
+
+void CalendarData::gatherData(calendar::ListDataCalendar* ldc) const {
+    int len = viewType == calendar::Month ? 42 : viewType;
+    for (int i = 0; i < len; i++) {
+        ldc->append(getData(ldc->topLeft.addDays(i)));
+    }
+}
+
+void Calendar::mainInit() {
+    auto f = WidgetFactoryStorage::get("test:widget_mini_calendar");
+    regClazz(f, Widget);
+    regClazz(f, Button);
+    regClazz(f, ArrowButton);
+    f = WidgetFactoryStorage::get("test:calendar/widget_calendar");
+    regClazz(f, Widget);
+    regClazz(f, calendar::MiniCalendarDropDown);
+    regClazz(f, DropDown);
+    regClazz(f, Calendar);
+    regClazz(f, ArrowButton);
+    regClazz(f, Button);
+    regClazz(f, calendar::ButtonSwitchView);
+    regClazz(f, calendar::SlotsWidgetCalendar);
+    f = WidgetFactoryStorage::get("test:calendar/dropdown_range");
+    regClazz(f, Widget);
+    regClazz(f, calendar::DropDownRange);
+    regClazz(f, Label);
+    regClazz(f, ArrowButton);
+    regClazz(f, ListWidget);
+    regClazz(f, calendar::ItemRange);
+    f = WidgetFactoryStorage::get("test:calendar/dropdown_mini_calendar");
+    regClazz(f, Widget);
+    regClazz(f, calendar::MiniCalendarDropDown);
+    regClazz(f, DropDown);
+    regClazz(f, Label);
+}
+
 Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic), dropdownMiniCalendar(), dropdownRange(),
-        btnPrev(), btnNext(), btnWeek(), btnMonth(), miniCalendar(), labelRange(), labelDate() {
+        btnPrev(), btnNext(), btnWeek(), btnMonth(), miniCalendar(), labelRange(), labelDate(), slotsContent() {
 }
 
 void Calendar::setData(WidgetData *d) {
-    auto cd = dynamic_cast<CalendarData*>(d);
-    if (!cd) {
-        throw Error("[Calendar::setData] requires CalendarData");
-    }
-    if (prepared) {
+    if (auto cd = dynamic_cast<CalendarData*>(d)) {
+        Widget::setData(d);
         miniCalendar->setData(cd);
         dropdownRange->setData(cd);
     }
-    Widget::setData(d);
+}
+
+void Calendar::setItemBuilder(const Identifier &factoryLoc) {
+    itemBuilder = [factoryLoc] {
+        return WidgetFactoryStorage::get(factoryLoc)->applyAndCast<ListItemCalendar>();
+    };
+}
+
+void Calendar::setItemBuilder(const std::function<ListItemCalendar*()>& ib) {
+    itemBuilder = ib;
 }
 
 void Calendar::syncDataToWidget() {
@@ -71,6 +126,13 @@ void Calendar::syncDataToWidget() {
         dropdownRange->setVisible(!isMonth);
         btnWeek->setSelected(!isMonth);
         btnMonth->setSelected(isMonth);
+        if (isMonth) {
+            slotsContent->setSlotCount(7, 6);
+        } else {
+            slotsContent->setSlotCount(cd->getViewType(), 1);
+        }
+        slotsContent->cd = cd;
+        refreshContent(cd);
     }
 }
 
@@ -129,8 +191,36 @@ void Calendar::connectModelView() {
     });
 }
 
+void Calendar::refreshContent(CalendarData* cd) const {
+    auto ldc = slotsContent->widgetData()->cast<calendar::ListDataCalendar>();
+    DELETE_LIST(ldc->getData())
+    ldc->clear();
+    cd->setTopLeft(ldc);
+    slotsContent->syncItems();
+    auto getter = AsyncTask::create();
+    getter->setTask([cd, ldc] {
+        cd->gatherData(ldc);
+    });
+    getter->setFinished(this, [this] {
+        slotsContent->widgetData()->cast<ListData>()->markAll();
+        setOperationEnabled(true);
+    });
+    getter->start();
+    setOperationEnabled(false);
+}
+
+void Calendar::setOperationEnabled(bool e) const {
+    btnPrev->setWidgetEnabled(e);
+    btnNext->setWidgetEnabled(e);
+    btnWeek->setWidgetEnabled(e);
+    btnMonth->setWidgetEnabled(e);
+    dropdownRange->setWidgetEnabled(e);
+    dropdownMiniCalendar->setWidgetEnabled(e);
+}
+
 void Calendar::initWidget() {
     if (!prepared) {
+        WidgetFactoryStorage::get("test:calendar/widget_calendar")->apply(nullptr, this);
         dropdownMiniCalendar = getPointer<DropDown>("dropdown_mini_calendar");
         labelDate = dropdownMiniCalendar->getPointer<Label>("l");
         miniCalendar = dropdownMiniCalendar->getPointer<calendar::MiniCalendarDropDown>("c");
@@ -141,14 +231,68 @@ void Calendar::initWidget() {
         btnWeek = getPointer<Button>("btnWeek");
         btnMonth = getPointer<Button>("btnMonth");
         btnWeek->setSelected(true);
+        slotsContent = getPointer<calendar::SlotsWidgetCalendar>("slots");
+        if (itemBuilder != nullptr) {
+            slotsContent->setItemBuilder(itemBuilder);
+        }
+        slotsContent->setData(new calendar::ListDataCalendar);
         prepared = true;
     }
+}
+
+ListItemCalendar::ListItemCalendar(QWidget *parent, bool iic): ListItem(parent, iic), sw(), itemIdx(), iconNum() {
+}
+
+void ListItemCalendar::syncDataToWidget() {
+    ListItem::syncDataToWidget();
+    if (!sw->cd) {
+        return;
+    }
+    auto topLeft = listData->cast<calendar::ListDataCalendar>()->topLeft;
+    auto d = topLeft.addDays(itemIdx);
+    if (sw->cd->getViewType() == calendar::Month) {
+        int m = sw->cd->getDateStart().month();
+        if (d.month() == m) {
+            iconColor = Styles::GRAY_TEXT_1->color;
+        } else {
+            iconColor = Styles::GRAY_4->color;
+        }
+        if (d == QDate::currentDate()) {
+            iconColor = Styles::BLUE_1->color;
+            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get();
+        } else {
+            iconFont = Styles::FONT_MAIN;
+        }
+    } else {
+        int dd = d.daysTo(QDate::currentDate());
+        if (dd < 0) {
+            iconFont = Styles::FONT_MAIN;
+            iconColor = Styles::GRAY_TEXT_1->color;
+        } else if (dd > 0) {
+            iconFont = Styles::FONT_MAIN;
+            iconColor = Styles::GRAY_4->color;
+        } else {
+            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get();
+            iconColor = Styles::BLUE_1->color;
+        }
+    }
+    iconNum = d.day();
+    update();
+}
+
+void ListItemCalendar::paintEvent(QPaintEvent *event) {
+    QPainter p(this);
+    p.setFont(iconFont);
+    p.setPen(iconColor);
+    auto str = QString::number(iconNum);
+    auto strSize = Label::baseTextSize(str, p.font());
+    p.drawText(QRect(0, 0, strSize.width(), strSize.height()), str, {Qt::AlignCenter});
 }
 
 USING_NAMESPACE(lr::calendar)
 
 MiniCalendarDropDown::MiniCalendarDropDown(QWidget *parent, bool iic): MiniCalendar(parent, iic),
-        layerDay(), layerMonth(), viewType(), isViewTypeMonth() {
+                                                                       layerDay(), layerMonth(), viewType(), isViewTypeMonth() {
 }
 
 void MiniCalendarDropDown::syncDataToWidget() {
@@ -388,5 +532,37 @@ ButtonSwitchView::ButtonSwitchView(QWidget *parent, bool iic): Button(parent, ii
 void ButtonSwitchView::handleButtonActivate(QMouseEvent *ev) {
     if (!selected) {
         Button::handleButtonActivate(ev);
+    }
+}
+
+SlotsWidgetCalendar::SlotsWidgetCalendar(QWidget *parent, bool iic):
+        SlotsWidget(parent, iic), itemBuilder([] { return new ListItemCalendar; }), cd() {
+}
+
+SlotsWidgetCalendar::~SlotsWidgetCalendar() {
+    if (auto ld = wData->cast<ListData>()) {
+        DELETE_LIST(ld->getData())
+        ld->clear();
+    }
+    delete wData;
+}
+
+ListItem *SlotsWidgetCalendar::newItem() {
+    auto lic = itemBuilder();
+    lic->sw = this;
+    lic->itemIdx = items.length();
+    return lic;
+}
+
+void SlotsWidgetCalendar::paintEvent(QPaintEvent *event) {
+    QPainter p(this);
+    p.fillRect(rect(), Styles::BLACK->color);
+    p.setPen(Styles::GRAY_4->color);
+    p.drawRect(0, 0, width() - 1, height() - 1);
+    for (int i = 1, y = slotHeight ; i < rows ; i++, y += slotHeight) {
+        p.drawLine(0, y, width(), y);
+    }
+    for (int i = 1, x = slotWidth ; i < columns ; i++, x += slotWidth) {
+        p.drawLine(x, 0, x, height());
     }
 }
