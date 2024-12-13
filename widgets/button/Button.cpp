@@ -126,11 +126,16 @@ void Button::setWidgetEnabled(bool e) {
     }
     if (enabled) {
         if (hasImg) {
-            qDebug() << this << type << "enabled & hasImg";
             setPixmap(imgNormal);
             setFixedSize(imgNormal.size());
-            if (type == Select && selected) {
-                setStyleSheet(QSS_SELECTED);
+            if (type == Select) {
+                if (selected) {
+                    setStyleSheet(QSS_SELECTED);
+                } else if (isMouseHovered(this)) {
+                    setStyleSheet(QSS_HOVERED);
+                }
+            } else if(isMouseHovered(this)) {
+                setStyleSheet(QSS_HOVERED);
             }
         } else {
             auto p = palette();

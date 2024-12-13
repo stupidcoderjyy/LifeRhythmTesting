@@ -6,31 +6,9 @@
 #include "ListWidget.h"
 #include "Calendar.h"
 #include "DropDown.h"
+#include "LoadingIcon.h"
 
 USING_NAMESPACE(lr)
-USING_NAMESPACE(lr::calendar)
-
-class ItemTest : public ListItemCalendar {
-public:
-    void paintEvent(QPaintEvent *event) override {
-        if (wData) {
-            QPainter painter(this);
-            painter.fillRect(event->rect(), Styles::CYAN_0->color);
-        }
-        ListItemCalendar::paintEvent(event);
-    }
-};
-
-class TestCalendarData : public CalendarData {
-protected:
-    WidgetData *getData(const QDate &date) const override {
-        if (date.dayOfWeek() > Qt::Friday) {
-            QThread::msleep(200);
-            return new WidgetData;
-        }
-        return nullptr;
-    }
-};
 
 int main(int argc, char* argv[]) {
     LifeRhythm lr(argc, argv);
@@ -47,12 +25,11 @@ int main(int argc, char* argv[]) {
         parent->setStyleSheet(qss_target("#parent", bg(Styles::GRAY_0->rgbHex)));
         auto layout = new QVBoxLayout(parent);
         parent->setLayout(layout);
-        auto* c = new Calendar;
-        c->setItemBuilder([] {
-            return new ItemTest;
-        });
-        c->setData(new TestCalendarData);
-        layout->addWidget(c);
+
+        auto icon = new LoadingIcon;
+        icon->startLoading();
+
+        layout->addWidget(icon);
         QTimer::singleShot(0, [parent] {
             parent->show();
         });

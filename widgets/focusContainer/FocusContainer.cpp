@@ -17,7 +17,7 @@ void FocusContainer::focusOutEvent(QFocusEvent *event) {
 }
 
 QString FocusContainer::getNormalQss() {
-    return qss_this(bg(Styles::CLEAR->rgbHex) + bd("1px", "solid", Styles::GRAY_2->rgbHex) + brad("3px"));
+    return qss_this(bg(Styles::CLEAR->rgbHex) + bd("1px", "solid", Styles::GRAY_3->rgbHex) + brad("3px"));
 }
 
 QString FocusContainer::getFocusedQss() {

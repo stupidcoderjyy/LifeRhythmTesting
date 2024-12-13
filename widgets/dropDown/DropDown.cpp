@@ -9,6 +9,7 @@
 #include <WidgetFactory.h>
 #include <Error.h>
 #include <QDebug>
+#include <QLayout>
 
 #include "Button.h"
 

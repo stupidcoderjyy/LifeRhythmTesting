@@ -14,6 +14,7 @@
     <inspection_tool class="CppParameterMayBeConst" enabled="false" level="HINT" enabled_by_default="false" />
     <inspection_tool class="CppParameterNamesMismatch" enabled="false" level="HINT" enabled_by_default="false" />
     <inspection_tool class="CppRedundantAccessSpecifier" enabled="false" level="HINT" enabled_by_default="false" />
+    <inspection_tool class="CppRedundantQualifier" enabled="false" level="HINT" enabled_by_default="false" />
     <inspection_tool class="CppTooWideScope" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="CppTooWideScopeInitStatement" enabled="false" level="HINT" enabled_by_default="false" />
   </profile>

@@ -24,6 +24,7 @@ set(INCLUDES
 #        src/jbTextButton
         widgets/label
         widgets/listWidget
+        widgets/loadingIcon
         widgets/menu
         widgets/miniCalendar
         widgets/slotsPainter
@@ -40,8 +41,19 @@ set(SRC_FILES
         widgets/arrowButton/ArrowButton.h
         widgets/button/Button.cpp
         widgets/button/Button.h
+
         widgets/calendar/Calendar.cpp
         widgets/calendar/Calendar.h
+        widgets/calendar/Common.h
+        widgets/calendar/DropDownRange.cpp
+        widgets/calendar/DropDownRange.h
+        widgets/calendar/MiniCalendarDropDown.cpp
+        widgets/calendar/MiniCalendarDropDown.h
+        widgets/calendar/ButtonSwitchView.cpp
+        widgets/calendar/ButtonSwitchView.h
+        widgets/calendar/SlotsWidgetCalendar.cpp
+        widgets/calendar/SlotsWidgetCalendar.h
+
         widgets/dropDown/DropDown.h
         widgets/dropDown/DropDown.cpp
         widgets/focusContainer/FocusContainer.h
@@ -54,6 +66,8 @@ set(SRC_FILES
         widgets/label/Label.cpp
         widgets/listWidget/ListWidget.h
         widgets/listWidget/ListWidget.cpp
+        widgets/loadingIcon/LoadingIcon.h
+        widgets/loadingIcon/LoadingIcon.cpp
         widgets/menu/Menu.h
         widgets/menu/Menu.cpp
         widgets/miniCalendar/MiniCalendar.cpp

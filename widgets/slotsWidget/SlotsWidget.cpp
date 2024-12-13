@@ -55,6 +55,51 @@ void SlotsWidget::syncItem(int idx) const {
     item->syncDataToWidget();
 }
 
+ListItem * SlotsWidget::newItem() {
+    if (factoryItem) {
+        return factoryItem->applyAndCast<ListItem>();
+    }
+    return new ListItem();
+}
+
+void SlotsWidget::updateBase() {
+    if (rows == 0 || columns == 0) {
+        return;
+    }
+    prepared = true;
+    int oldSlotHeight = slotHeight, oldSlotWidth = slotWidth;
+    if (vSlotSizePolicy == Auto) {
+        slotHeight = (height() - regionMargins.top() - regionMargins.bottom()) / rows;
+    }
+    if (hSlotSizePolicy == Auto) {
+        slotWidth = (width() - regionMargins.right() - regionMargins.left()) / columns;
+    }
+    if (oldSlotHeight == slotHeight && oldSlotWidth == slotWidth) {
+        return;
+    }
+    region = {slotWidth * columns, slotHeight * rows};
+    int totalItems = rows * columns;
+    items.reserve(totalItems);
+    int oldItems = items.length();
+    for (int i = oldItems; i < totalItems; i++) {
+        prepareItem(newItem());
+    }
+    int i = 0, x = regionMargins.left(), y = regionMargins.top();
+    for (int r = 0; r < rows; r++, x = regionMargins.left(), y += slotHeight) {
+        for (int c = 0; c < columns; c++) {
+            auto item = items[i++];
+            item->setGeometry(QRect(x, y, slotWidth, slotHeight).marginsRemoved(slotMargins));
+            item->setVisible(true);
+            x += slotWidth;
+        }
+    }
+    int rb = i, rn = items.length() - i;
+    while (i < items.length()) {
+        delete items[i++];
+    }
+    items.remove(rb, rn);
+}
+
 void SlotsWidget::syncItems(int begin, int end) const {
     int rBorder = rows * columns;
     if (end < 0 || begin >= rBorder) {
@@ -65,13 +110,6 @@ void SlotsWidget::syncItems(int begin, int end) const {
     while (begin <= end) {
         syncItem(begin++);
     }
-}
-
-ListItem * SlotsWidget::newItem() {
-    if (factoryItem) {
-        return factoryItem->applyAndCast<ListItem>();
-    }
-    return new ListItem();
 }
 
 void SlotsWidget::resizeEvent(QResizeEvent *event) {
@@ -108,38 +146,4 @@ void SlotsWidget::onPostParsing(Handlers &handlers, NBT *nbt) {
             }
         };
     }
-}
-
-void SlotsWidget::updateBase() {
-    prepared = true;
-    int oldSlotHeight = slotHeight, oldSlotWidth = slotWidth;
-    if (vSlotSizePolicy == Auto) {
-        slotHeight = height() / rows;
-    }
-    if (hSlotSizePolicy == Auto) {
-        slotWidth = width() / columns;
-    }
-    if (oldSlotHeight == slotHeight && oldSlotWidth == slotWidth) {
-        return;
-    }
-    int totalItems = rows * columns;
-    items.reserve(totalItems);
-    int oldItems = items.length();
-    for (int i = oldItems ; i < totalItems ; i ++) {
-        prepareItem(newItem());
-    }
-    int i = 0, x = 0, y = 0;
-    for (int r = 0 ; r < rows ; r++, x = 0, y += slotHeight) {
-        for (int c = 0; c < columns ; c++) {
-            auto item = items[i++];
-            item->setGeometry(x, y, slotWidth, slotHeight);
-            item->setVisible(true);
-            x += slotWidth;
-        }
-    }
-    int rb = i, rn = items.length() - i;
-    while (i < items.length()) {
-        delete items[i++];
-    }
-    items.remove(rb, rn);
 }

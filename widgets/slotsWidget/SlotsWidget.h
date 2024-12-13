@@ -21,6 +21,9 @@ protected:
     int columns, rows;
     SlotSizePolicy vSlotSizePolicy, hSlotSizePolicy;
     WidgetFactory *factoryItem;
+    QMargins slotMargins;
+    QMargins regionMargins;
+    QSize region;
 public:
     explicit SlotsWidget(QWidget *parent = nullptr, bool iic = true);
     void setData(WidgetData *d) override;
@@ -29,17 +32,18 @@ public:
     inline void setSlotSize(int width, int height);
     inline void setSlotCount(int columns, int rows);
     inline void setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical);
+    inline void setSlotMargins(int left, int top, int right, int bottom);
+    inline void setRegionMargins(int left, int top, int right, int bottom);
     inline void syncItems() const;
 protected:
     virtual void prepareItem(ListItem* w);
-    void syncItems(int begin, int end) const;
     virtual void syncItem(int idx) const;
     virtual ListItem* newItem();
+    virtual void updateBase();
+    void syncItems(int begin, int end) const;
     void resizeEvent(QResizeEvent* event) override;
     void connectModelView() override;
     void onPostParsing(Handlers &handlers, NBT *nbt) override;
-private:
-    void updateBase();
 };
 
 inline void SlotsWidget::setSlotSize(int width, int height) {
@@ -60,6 +64,16 @@ inline void SlotsWidget::setSlotCount(int c, int r) {
 inline void SlotsWidget::setSlotSizePolicy(SlotSizePolicy horizontal, SlotSizePolicy vertical) {
     vSlotSizePolicy = vertical;
     hSlotSizePolicy = horizontal;
+    updateBase();
+}
+
+inline void SlotsWidget::setSlotMargins(int left, int top, int right, int bottom) {
+    slotMargins = QMargins(left, top, right, bottom);
+    updateBase();
+}
+
+inline void SlotsWidget::setRegionMargins(int left, int top, int right, int bottom) {
+    regionMargins = QMargins(left, top, right, bottom);
     updateBase();
 }
 
