@@ -15,21 +15,16 @@ class SlotsWidgetCalendar : public SlotsWidget {
     friend class lr::ListItemCalendar;
     friend class lr::Calendar;
 private:
-    std::function<ListItemCalendar*()> itemBuilder;
     CalendarData *cd;
+    Calendar* calendar;
 public:
     explicit SlotsWidgetCalendar(QWidget *parent = nullptr, bool iic = true);
     ~SlotsWidgetCalendar() override;
-    inline void setItemBuilder(std::function<ListItemCalendar*()> itemBuilder);
 protected:
     ListItem *newItem() override;
     void paintEvent(QPaintEvent *event) override;
     void updateBase() override;
 };
-
-inline void SlotsWidgetCalendar::setItemBuilder(std::function<ListItemCalendar*()> ib) {
-    itemBuilder = std::move(ib);
-}
 
 END_NAMESPACE
 

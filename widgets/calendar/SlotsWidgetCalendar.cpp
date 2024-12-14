@@ -9,7 +9,7 @@
 USING_NAMESPACE(lr::calendar)
 
 SlotsWidgetCalendar::SlotsWidgetCalendar(QWidget *parent, bool iic):
-        SlotsWidget(parent, iic), itemBuilder([] { return new ListItemCalendar; }), cd() {
+        SlotsWidget(parent, iic), cd(), calendar() {
 }
 
 SlotsWidgetCalendar::~SlotsWidgetCalendar() {
@@ -21,7 +21,7 @@ SlotsWidgetCalendar::~SlotsWidgetCalendar() {
 }
 
 ListItem *SlotsWidgetCalendar::newItem() {
-    auto lic = itemBuilder();
+    auto lic = calendar->newItem();
     lic->sw = this;
     lic->itemIdx = items.length();
     return lic;

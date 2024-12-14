@@ -10,7 +10,7 @@
 USING_NAMESPACE(lr)
 
 SlotsPainter::SlotsPainter(QWidget *parent, bool initInConstructor): Widget(parent, initInConstructor), slotWidth(), slotHeight(),
-        columns(), rows(), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
+        columns(1), rows(1), vSlotSizePolicy(Auto), hSlotSizePolicy(Auto) {
 }
 
 void SlotsPainter::addLayer(SlotsPainterLayer *layer) {

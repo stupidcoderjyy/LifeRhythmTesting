@@ -11,6 +11,7 @@
 #include "Button.h"
 #include "DropDown.h"
 #include "LoadingIcon.h"
+#include "SlotsPainter.h"
 
 BEGIN_NAMESPACE(lr)
 
@@ -41,17 +42,17 @@ private:
     calendar::MiniCalendarDropDown* miniCalendar;
     Label *labelRange, *labelDate;
     calendar::SlotsWidgetCalendar* slotsContent;
-    std::function<ListItemCalendar*()> itemBuilder;
     LoadingIcon* loadingIcon;
+    SlotsPainter* spWeekdays;
+    calendar::LayerWeekdays* layerWeekdays;
 public:
     static void mainInit();
     explicit Calendar(QWidget* parent = nullptr, bool iic = true);
     void setData(WidgetData *d) override;
-    void setItemBuilder(const Identifier& factoryLoc);
-    void setItemBuilder(const std::function<ListItemCalendar*()>& itemBuilder);
     void syncDataToWidget() override;
     void connectModelView() override;
     void initWidget() override;
+    virtual ListItemCalendar* newItem();
 private:
     void refreshContent(CalendarData* cd) const;
     void setOperationEnabled(bool e) const;

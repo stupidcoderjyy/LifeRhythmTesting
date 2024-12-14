@@ -24,6 +24,7 @@ class LayerDay;
 class LayerMonth;
 class MiniCalendarDropDown;
 class SlotsWidgetCalendar;
+class LayerWeekdays;
 
 class ListDataCalendar : public ListData {
 public:

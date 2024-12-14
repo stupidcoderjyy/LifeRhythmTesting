@@ -53,6 +53,8 @@ set(SRC_FILES
         widgets/calendar/ButtonSwitchView.h
         widgets/calendar/SlotsWidgetCalendar.cpp
         widgets/calendar/SlotsWidgetCalendar.h
+        widgets/calendar/SlotsPainterWeekdays.cpp
+        widgets/calendar/SlotsPainterWeekdays.h
 
         widgets/dropDown/DropDown.h
         widgets/dropDown/DropDown.cpp

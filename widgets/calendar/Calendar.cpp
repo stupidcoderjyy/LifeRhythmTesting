@@ -10,6 +10,7 @@
 #include "ButtonSwitchView.h"
 #include "SlotsWidgetCalendar.h"
 #include "DropDownRange.h"
+#include "SlotsPainterWeekdays.h"
 
 USING_NAMESPACE(lr)
 
@@ -61,6 +62,7 @@ void Calendar::mainInit() {
     regClazz(f, LoadingIcon);
     regClazz(f, calendar::ButtonSwitchView);
     regClazz(f, calendar::SlotsWidgetCalendar);
+    regClazz(f, SlotsPainter);
     f = WidgetFactoryStorage::get("test:calendar/dropdown_range");
     regClazz(f, Widget);
     regClazz(f, calendar::DropDownRange);
@@ -77,7 +79,8 @@ void Calendar::mainInit() {
 
 Calendar::Calendar(QWidget *parent, bool iic): Widget(parent, iic), dropdownMiniCalendar(), dropdownRange(),
                                                btnPrev(), btnNext(), btnWeek(), btnMonth(), miniCalendar(),
-                                               labelRange(), labelDate(), slotsContent(), loadingIcon() {
+                                               labelRange(), labelDate(), slotsContent(), loadingIcon(),
+                                               spWeekdays(), layerWeekdays() {
 }
 
 void Calendar::setData(WidgetData *d) {
@@ -86,16 +89,6 @@ void Calendar::setData(WidgetData *d) {
         miniCalendar->setData(cd);
         dropdownRange->setData(cd);
     }
-}
-
-void Calendar::setItemBuilder(const Identifier &factoryLoc) {
-    itemBuilder = [factoryLoc] {
-        return WidgetFactoryStorage::get(factoryLoc)->applyAndCast<ListItemCalendar>();
-    };
-}
-
-void Calendar::setItemBuilder(const std::function<ListItemCalendar*()>& ib) {
-    itemBuilder = ib;
 }
 
 void Calendar::syncDataToWidget() {
@@ -135,8 +128,12 @@ void Calendar::syncDataToWidget() {
         btnMonth->setSelected(isMonth);
         if (isMonth) {
             slotsContent->setSlotCount(7, 6);
+            spWeekdays->setSlotCount(7, 1);
+            layerWeekdays->set(0);
         } else {
             slotsContent->setSlotCount(cd->getViewType(), 1);
+            spWeekdays->setSlotCount(cd->getViewType(), 1);
+            layerWeekdays->set(cd->getDateStart().dayOfWeek() - 1);
         }
         slotsContent->cd = cd;
         refreshContent(cd);
@@ -246,13 +243,18 @@ void Calendar::initWidget() {
         slotsContent = getPointer<calendar::SlotsWidgetCalendar>("slots");
         slotsContent->setSlotMargins(0,0,1,1);
         slotsContent->setRegionMargins(1,1,0,0);
-        if (itemBuilder != nullptr) {
-            slotsContent->setItemBuilder(itemBuilder);
-        }
+        slotsContent->calendar = this;
         slotsContent->setData(new calendar::ListDataCalendar);
         loadingIcon = getPointer<LoadingIcon>("loadingIcon");
+        layerWeekdays = new calendar::LayerWeekdays;
+        spWeekdays = getPointer<SlotsPainter>("weekdays");
+        spWeekdays->addLayer(layerWeekdays);
         prepared = true;
     }
+}
+
+ListItemCalendar * Calendar::newItem() {
+    return new ListItemCalendar();
 }
 
 ListItemCalendar::ListItemCalendar(QWidget *parent, bool iic): ListItem(parent, iic), sw(), itemIdx(), iconNum() {
@@ -274,20 +276,20 @@ void ListItemCalendar::syncDataToWidget() {
         }
         if (d == QDate::currentDate()) {
             iconColor = Styles::BLUE_1->color;
-            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get();
+            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_SMALL).setBoldWeight().get();
         } else {
-            iconFont = Styles::FONT_MAIN;
+            iconFont = Styles::FONT_SMALL;
         }
     } else {
         int dd = d.daysTo(QDate::currentDate());
         if (dd < 0) {
-            iconFont = Styles::FONT_MAIN;
+            iconFont = Styles::FONT_SMALL;
             iconColor = Styles::GRAY_TEXT_1->color;
         } else if (dd > 0) {
-            iconFont = Styles::FONT_MAIN;
+            iconFont = Styles::FONT_SMALL;
             iconColor = Styles::GRAY_4->color;
         } else {
-            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_MAIN).setBoldWeight().get();
+            iconFont = FontBuilder(Styles::FONT_TYPE_MAIN, Styles::FONT_SMALL).setBoldWeight().get();
             iconColor = Styles::BLUE_1->color;
         }
     }
